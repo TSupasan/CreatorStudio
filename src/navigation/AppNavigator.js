@@ -1,9 +1,9 @@
-
 import React from 'react';
 
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 
 import DashboardScreen from '../screens/DashboardScreen';
+import ChannelsScreen from '../screens/ChannelsScreen';
 import CustomTabBar from './CustomTabBar';
 import ComingSoonScreen from '../components/ComingSoonScreen';
 
@@ -16,7 +16,6 @@ export default function AppNavigator() {
       tabBar={props => <CustomTabBar {...props} />}
       screenOptions={{
         headerShown: false,
-        animation: 'fade',
       }}
     >
       <Tab.Screen
@@ -56,12 +55,7 @@ export default function AppNavigator() {
 
       <Tab.Screen
         name="Channels"
-        children={() => (
-          <ComingSoonScreen
-            title="My Channels"
-            icon="people-outline"
-          />
-        )}
+        component={ChannelsScreen}
       />
     </Tab.Navigator>
   );
