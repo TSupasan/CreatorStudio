@@ -1,9 +1,12 @@
-import React from 'react';
 
+import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 
 import DashboardScreen from '../screens/DashboardScreen';
 import ChannelsScreen from '../screens/ChannelsScreen';
+import VideosScreen from '../screens/VideosScreen';
+import CreateVideoScreen from '../screens/CreateVideoScreen';
+
 import CustomTabBar from './CustomTabBar';
 import ComingSoonScreen from '../components/ComingSoonScreen';
 
@@ -18,30 +21,11 @@ export default function AppNavigator() {
         headerShown: false,
       }}
     >
-      <Tab.Screen
-        name="Home"
-        component={DashboardScreen}
-      />
+      <Tab.Screen name="Home" component={DashboardScreen} />
 
-      <Tab.Screen
-        name="Videos"
-        children={() => (
-          <ComingSoonScreen
-            title="My Videos"
-            icon="videocam-outline"
-          />
-        )}
-      />
+      <Tab.Screen name="Videos" component={VideosScreen} />
 
-      <Tab.Screen
-        name="Create"
-        children={() => (
-          <ComingSoonScreen
-            title="Create Project"
-            icon="add-circle-outline"
-          />
-        )}
-      />
+      <Tab.Screen name="Create" component={CreateVideoScreen} />
 
       <Tab.Screen
         name="Calendar"
@@ -53,10 +37,7 @@ export default function AppNavigator() {
         )}
       />
 
-      <Tab.Screen
-        name="Channels"
-        component={ChannelsScreen}
-      />
+      <Tab.Screen name="Channels" component={ChannelsScreen} />
     </Tab.Navigator>
   );
 }
