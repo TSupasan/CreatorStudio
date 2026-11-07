@@ -26,7 +26,7 @@ const FILTERS = [
   'Published',
 ];
 
-export default function VideosScreen() {
+export default function VideosScreen({ navigation }) {
   const { colors, isDark } = useTheme();
 
   const [videos, setVideos] = useState([]);
@@ -56,7 +56,9 @@ export default function VideosScreen() {
     return videos.filter((video) => {
       const matchesSearch =
         video.title.toLowerCase().includes(search.toLowerCase()) ||
-        (video.channel_name || '').toLowerCase().includes(search.toLowerCase());
+        (video.channel_name || '')
+          .toLowerCase()
+          .includes(search.toLowerCase());
 
       const matchesStatus =
         selectedFilter === 'All' || video.status === selectedFilter;
@@ -81,83 +83,109 @@ export default function VideosScreen() {
   };
 
   const renderVideo = ({ item }) => (
-    <GlassCard style={styles.videoCard}>
-      <View style={styles.videoRow}>
-        <View
-          style={[
-            styles.thumbnail,
-            { backgroundColor: colors.surfaceSecondary },
-          ]}
-        >
-          <Ionicons
-            name="videocam-outline"
-            size={30}
-            color={colors.textMuted}
-          />
-          <Text style={[styles.thumbnailText, { color: colors.textMuted }]}>
-            NO THUMBNAIL
-          </Text>
-        </View>
-
-        <View style={styles.videoInfo}>
-          <Text
-            style={[styles.videoTitle, { color: colors.text }]}
-            numberOfLines={2}
+    <TouchableOpacity
+      activeOpacity={0.85}
+      onPress={() =>
+        navigation.navigate('VideoDetails', {
+          videoId: item.id,
+        })
+      }
+    >
+      <GlassCard style={styles.videoCard}>
+        <View style={styles.videoRow}>
+          <View
+            style={[
+              styles.thumbnail,
+              { backgroundColor: colors.surfaceSecondary },
+            ]}
           >
-            {item.title}
-          </Text>
-
-          <View style={styles.channelRow}>
             <Ionicons
-              name="logo-youtube"
-              size={13}
-              color={colors.textSecondary}
+              name="videocam-outline"
+              size={30}
+              color={colors.textMuted}
             />
-            <Text
-              style={[styles.channelName, { color: colors.textSecondary }]}
-              numberOfLines={1}
-            >
-              {item.channel_name}
+
+            <Text style={[styles.thumbnailText, { color: colors.textMuted }]}>
+              NO THUMBNAIL
             </Text>
           </View>
 
-          <View style={styles.metadataRow}>
-            <View
-              style={[
-                styles.statusBadge,
-                { backgroundColor: getStatusColor(item.status) + '20' },
-              ]}
+          <View style={styles.videoInfo}>
+            <Text
+              style={[styles.videoTitle, { color: colors.text }]}
+              numberOfLines={2}
             >
+              {item.title}
+            </Text>
+
+            <View style={styles.channelRow}>
+              <Ionicons
+                name="logo-youtube"
+                size={13}
+                color={colors.textSecondary}
+              />
+
               <Text
-                style={[
-                  styles.statusText,
-                  { color: getStatusColor(item.status) },
-                ]}
+                style={[styles.channelName, { color: colors.textSecondary }]}
+                numberOfLines={1}
               >
-                {item.status}
+                {item.channel_name}
               </Text>
             </View>
 
-            <Text style={[styles.priorityText, { color: colors.textSecondary }]}>
-              {item.priority} Priority
-            </Text>
+            <View style={styles.metadataRow}>
+              <View
+                style={[
+                  styles.statusBadge,
+                  { backgroundColor: getStatusColor(item.status) + '20' },
+                ]}
+              >
+                <Text
+                  style={[
+                    styles.statusText,
+                    { color: getStatusColor(item.status) },
+                  ]}
+                >
+                  {item.status}
+                </Text>
+              </View>
+
+              <Text
+                style={[styles.priorityText, { color: colors.textSecondary }]}
+              >
+                {item.priority} Priority
+              </Text>
+            </View>
           </View>
         </View>
-      </View>
 
-      {item.upload_date ? (
-        <View style={[styles.dateRow, { borderTopColor: colors.border }]}>
-          <Ionicons
-            name="calendar-outline"
-            size={15}
-            color={colors.textSecondary}
-          />
-          <Text style={[styles.dateText, { color: colors.textSecondary }]}>
-            Upload: {item.upload_date}
+        {item.upload_date ? (
+          <View style={[styles.dateRow, { borderTopColor: colors.border }]}>
+            <Ionicons
+              name="calendar-outline"
+              size={15}
+              color={colors.textSecondary}
+            />
+
+            <Text style={[styles.dateText, { color: colors.textSecondary }]}>
+              Upload: {item.upload_date}
+            </Text>
+          </View>
+        ) : null}
+
+        <View style={styles.viewDetailsRow}>
+          <Text style={[styles.viewDetailsText, { color: colors.primary }]}>
+            View Details
           </Text>
+
+          <Ionicons
+            name="chevron-forward"
+            size={17}
+            color={colors.primary}
+          />
         </View>
-      ) : null}
-    </GlassCard>
+      </GlassCard>
+    </TouchableOpacity>
   );
 
   return (
@@ -184,6 +212,7 @@ export default function VideosScreen() {
                 <Text style={[styles.title, { color: colors.text }]}>
                   My Videos
                 </Text>
+
                 <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
                   Manage your video projects.
                 </Text>
@@ -200,6 +229,7 @@ export default function VideosScreen() {
                   size={18}
                   color={colors.primary}
                 />
+
                 <Text style={[styles.totalNumber, { color: colors.primary }]}>
                   {videos.length}
                 </Text>
@@ -335,31 +365,37 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
+
   listContent: {
     paddingHorizontal: 20,
     paddingTop: 65,
     paddingBottom: 130,
   },
+
   eyebrow: {
     fontSize: 11,
     fontWeight: '700',
     letterSpacing: 2,
     marginBottom: 12,
   },
+
   headingRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: 24,
   },
+
   title: {
     fontSize: 30,
     fontWeight: '800',
   },
+
   subtitle: {
     fontSize: 14,
     marginTop: 7,
   },
+
   totalBadge: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -368,10 +404,12 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     borderRadius: 14,
   },
+
   totalNumber: {
     fontSize: 16,
     fontWeight: '800',
   },
+
   searchContainer: {
     height: 52,
     borderWidth: 1,
@@ -382,51 +420,62 @@ const styles = StyleSheet.create({
     gap: 10,
     marginBottom: 25,
   },
+
   searchInput: {
     flex: 1,
     fontSize: 14,
   },
+
   filterHeading: {
     fontSize: 15,
     fontWeight: '700',
     marginBottom: 13,
   },
+
   filterList: {
     gap: 9,
     paddingBottom: 24,
   },
+
   filterChip: {
     borderWidth: 1,
     paddingHorizontal: 16,
     paddingVertical: 10,
     borderRadius: 20,
   },
+
   filterText: {
     fontSize: 12,
     fontWeight: '600',
   },
+
   resultsHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: 15,
   },
+
   sectionTitle: {
     fontSize: 19,
     fontWeight: '700',
   },
+
   resultsCount: {
     fontSize: 10,
     fontWeight: '800',
     letterSpacing: 1,
   },
+
   videoCard: {
     marginBottom: 14,
   },
+
   videoRow: {
     flexDirection: 'row',
     gap: 14,
   },
+
   thumbnail: {
     width: 105,
     height: 105,
@@ -435,30 +484,36 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: 7,
   },
+
   thumbnailText: {
     fontSize: 8,
     fontWeight: '800',
     letterSpacing: 0.5,
   },
+
   videoInfo: {
     flex: 1,
     justifyContent: 'center',
   },
+
   videoTitle: {
     fontSize: 15,
     fontWeight: '700',
     lineHeight: 21,
   },
+
   channelRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 5,
     marginTop: 9,
   },
+
   channelName: {
     fontSize: 11,
     flexShrink: 1,
   },
+
   metadataRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -466,19 +521,23 @@ const styles = StyleSheet.create({
     gap: 8,
     marginTop: 10,
   },
+
   statusBadge: {
     paddingHorizontal: 9,
     paddingVertical: 5,
     borderRadius: 8,
   },
+
   statusText: {
     fontSize: 10,
     fontWeight: '700',
   },
+
   priorityText: {
     fontSize: 10,
     fontWeight: '600',
   },
+
   dateRow: {
     borderTopWidth: 1,
     marginTop: 14,
@@ -487,14 +546,33 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 7,
   },
+
   dateText: {
     fontSize: 11,
   },
+
+  viewDetailsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'flex-end',
+    marginTop: 13,
+    paddingTop: 10,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: '#88888840',
+    gap: 5,
+  },
+
+  viewDetailsText: {
+    fontSize: 12,
+    fontWeight: '700',
+  },
+
   emptyContainer: {
     alignItems: 'center',
     paddingHorizontal: 25,
     paddingVertical: 35,
   },
+
   emptyIcon: {
     width: 75,
     height: 75,
@@ -502,12 +580,14 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
+
   emptyTitle: {
     fontSize: 17,
     fontWeight: '700',
     marginTop: 17,
     textAlign: 'center',
   },
+
   emptyText: {
     fontSize: 13,
     textAlign: 'center',

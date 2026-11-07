@@ -11,62 +11,174 @@ import {
   KeyboardAvoidingView,
   Platform,
   StatusBar,
+  ActivityIndicator,
 } from 'react-native';
 
+import DateTimePicker from '@react-native-community/datetimepicker';
 import { useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 
 import { useTheme } from '../theme/ThemeContext';
 import GlassCard from '../components/GlassCard';
+import { getDatabase } from '../database/database';
 import { getAllChannels } from '../database/repositories/channelRepository';
-import { addVideo } from '../database/repositories/videoRepository';
+import {
+  addVideo,
+  updateVideo,
+} from '../database/repositories/videoRepository';
 
-const STATUSES = ['Idea', 'Planning', 'Editing', 'Ready to Publish'];
+const STATUSES = [
+  'Idea',
+  'Planning',
+  'Editing',
+  'Ready to Publish',
+  'Published',
+];
+
 const PRIORITIES = ['Low', 'Medium', 'High'];
 
-export default function CreateVideoScreen({ navigation }) {
+export default function CreateVideoScreen({ navigation, route }) {
   const { colors, isDark } = useTheme();
+
+  const videoId = route?.params?.videoId;
 
   const [channels, setChannels] = useState([]);
   const [selectedChannel, setSelectedChannel] = useState(null);
 
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
-  const [uploadDate, setUploadDate] = useState('');
+
+  const [uploadDate, setUploadDate] = useState(null);
+  const [showDatePicker, setShowDatePicker] = useState(false);
+
   const [status, setStatus] = useState('Idea');
   const [priority, setPriority] = useState('Medium');
 
   const [saving, setSaving] = useState(false);
+  const [loadingProject, setLoadingProject] = useState(false);
 
-  const loadChannels = async () => {
+  const isEditing = Boolean(videoId);
+
+  const resetForm = () => {
+    setSelectedChannel(channels.length > 0 ? channels[0] : null);
+    setTitle('');
+    setDescription('');
+    setUploadDate(null);
+    setShowDatePicker(false);
+    setStatus('Idea');
+    setPriority('Medium');
+  };
+
+  const loadScreenData = async () => {
     try {
-      const data = await getAllChannels();
-      setChannels(data);
+      const channelData = await getAllChannels();
+      setChannels(channelData);
 
-      if (data.length > 0) {
-        setSelectedChannel((current) => {
-          if (current && data.some((channel) => channel.id === current.id)) {
-            return current;
+      if (videoId) {
+        setLoadingProject(true);
+
+        const db = await getDatabase();
+
+        const video = await db.getFirstAsync(
+          'SELECT * FROM videos WHERE id = ?',
+          [Number(videoId)]
+        );
+
+        if (!video) {
+          Alert.alert('Project Not Found', 'This video project could not be found.');
+          return;
+        }
+
+        const matchingChannel = channelData.find(
+          (channel) => channel.id === video.channel_id
+        );
+
+        setSelectedChannel(matchingChannel || null);
+        setTitle(video.title || '');
+        setDescription(video.description || '');
+        setStatus(video.status || 'Idea');
+        setPriority(video.priority || 'Medium');
+
+        if (video.upload_date) {
+          const parts = video.upload_date.split('-');
+
+          if (parts.length === 3) {
+            setUploadDate(
+              new Date(
+                Number(parts[0]),
+                Number(parts[1]) - 1,
+                Number(parts[2])
+              )
+            );
+          } else {
+            setUploadDate(null);
           }
-          return data[0];
-        });
+        } else {
+          setUploadDate(null);
+        }
       } else {
-        setSelectedChannel(null);
+        setSelectedChannel(channelData[0] || null);
+        setTitle('');
+        setDescription('');
+        setUploadDate(null);
+        setShowDatePicker(false);
+        setStatus('Idea');
+        setPriority('Medium');
       }
     } catch (error) {
-      console.error('Failed to load channels:', error);
+      console.error('Failed to load project:', error);
+      Alert.alert('Error', 'Could not load project information.');
+    } finally {
+      setLoadingProject(false);
     }
   };
 
   useFocusEffect(
     useCallback(() => {
-      loadChannels();
-    }, [])
+      loadScreenData();
+    }, [videoId])
   );
+
+  const formatDisplayDate = (date) => {
+    if (!date) return 'Select upload date';
+
+    return date.toLocaleDateString('en-GB', {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric',
+    });
+  };
+
+  const formatDatabaseDate = (date) => {
+    if (!date) return null;
+
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+
+    return `${year}-${month}-${day}`;
+  };
+
+  const handleDateChange = (event, selectedDate) => {
+    if (Platform.OS === 'android') {
+      setShowDatePicker(false);
+    }
+
+    if (event.type === 'set' && selectedDate) {
+      setUploadDate(selectedDate);
+    }
+
+    if (event.type === 'dismissed') {
+      setShowDatePicker(false);
+    }
+  };
 
   const handleSave = async () => {
     if (!selectedChannel) {
-      Alert.alert('Channel Required', 'Please create and select a channel first.');
+      Alert.alert(
+        'Channel Required',
+        'Please create and select a channel first.'
+      );
       return;
     }
 
@@ -75,39 +187,53 @@ export default function CreateVideoScreen({ navigation }) {
       return;
     }
 
-    if (
-      uploadDate.trim() &&
-      !/^\d{4}-\d{2}-\d{2}$/.test(uploadDate.trim())
-    ) {
-      Alert.alert('Invalid Date', 'Please use YYYY-MM-DD format.');
-      return;
-    }
-
     setSaving(true);
 
-    try {
-      await addVideo({
-        channel_id: selectedChannel.id,
-        title: title.trim(),
-        description: description.trim(),
-        upload_date: uploadDate.trim() || null,
-        status,
-        priority,
-        thumbnail_uri: null,
-      });
+    const videoData = {
+      channel_id: selectedChannel.id,
+      title: title.trim(),
+      description: description.trim(),
+      upload_date: formatDatabaseDate(uploadDate),
+      status,
+      priority,
+      thumbnail_uri: null,
+    };
 
-      Alert.alert('Project Created', 'Your video project was saved successfully.');
+    try {
+      if (isEditing) {
+        await updateVideo(Number(videoId), videoData);
+
+        Alert.alert(
+          'Project Updated',
+          'Your video project was updated successfully.'
+        );
+      } else {
+        await addVideo(videoData);
+
+        Alert.alert(
+          'Project Created',
+          'Your video project was saved successfully.'
+        );
+      }
 
       setTitle('');
       setDescription('');
-      setUploadDate('');
+      setUploadDate(null);
+      setShowDatePicker(false);
       setStatus('Idea');
       setPriority('Medium');
 
-      navigation.navigate('Videos');
+      navigation.setParams({ videoId: undefined });
+      navigation.navigate('MainTabs', {
+        screen: 'Videos',
+      });
     } catch (error) {
       console.error('Failed to save video:', error);
-      Alert.alert('Error', 'Could not save your video project. Please try again.');
+
+      Alert.alert(
+        'Error',
+        'Could not save your video project. Please try again.'
+      );
     } finally {
       setSaving(false);
     }
@@ -144,6 +270,20 @@ export default function CreateVideoScreen({ navigation }) {
     </View>
   );
 
+  if (loadingProject) {
+    return (
+      <View style={[
+        styles.loadingContainer,
+        { backgroundColor: colors.background },
+      ]}>
+        <ActivityIndicator size="large" color={colors.primary} />
+        <Text style={{ color: colors.textSecondary, marginTop: 12 }}>
+          Loading project...
+        </Text>
+      </View>
+    );
+  }
+
   return (
     <KeyboardAvoidingView
       style={[styles.container, { backgroundColor: colors.background }]}
@@ -157,36 +297,58 @@ export default function CreateVideoScreen({ navigation }) {
         contentContainerStyle={styles.content}
       >
         <Text style={[styles.eyebrow, { color: colors.primary }]}>
-          BUILD YOUR NEXT IDEA
+          {isEditing ? 'UPDATE YOUR PROJECT' : 'BUILD YOUR NEXT IDEA'}
         </Text>
 
         <Text style={[styles.heading, { color: colors.text }]}>
-          Create Project
+          {isEditing ? 'Edit Project' : 'Create Project'}
         </Text>
 
         <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
-          Plan your next video and keep everything organized.
+          {isEditing
+            ? 'Update your video information and project settings.'
+            : 'Plan your next video and keep everything organized.'}
         </Text>
 
+        {/* CHANNEL SELECTION */}
         <GlassCard style={styles.formCard}>
           <View style={styles.sectionHeading}>
-            <View style={[styles.sectionIcon, { backgroundColor: colors.primaryLight }]}>
+            <View style={[
+              styles.sectionIcon,
+              { backgroundColor: colors.primaryLight },
+            ]}>
               <Ionicons name="logo-youtube" size={19} color={colors.primary} />
             </View>
+
             <Text style={[styles.sectionTitle, { color: colors.text }]}>
               Select Channel
             </Text>
           </View>
 
           {channels.length === 0 ? (
-            <View style={[styles.emptyChannel, { backgroundColor: colors.surfaceSecondary }]}>
-              <Ionicons name="alert-circle-outline" size={22} color={colors.warning} />
-              <Text style={[styles.emptyChannelText, { color: colors.textSecondary }]}>
+            <View style={[
+              styles.emptyChannel,
+              { backgroundColor: colors.surfaceSecondary },
+            ]}>
+              <Ionicons
+                name="alert-circle-outline"
+                size={22}
+                color={colors.warning}
+              />
+
+              <Text style={[
+                styles.emptyChannelText,
+                { color: colors.textSecondary },
+              ]}>
                 No channels available. Please create a channel first.
               </Text>
+
               <TouchableOpacity
                 onPress={() => navigation.navigate('Channels')}
-                style={[styles.createChannelButton, { backgroundColor: colors.primary }]}
+                style={[
+                  styles.createChannelButton,
+                  { backgroundColor: colors.primary },
+                ]}
               >
                 <Text style={styles.createChannelText}>Go to Channels</Text>
               </TouchableOpacity>
@@ -203,8 +365,12 @@ export default function CreateVideoScreen({ navigation }) {
                     style={[
                       styles.channelOption,
                       {
-                        backgroundColor: active ? colors.primaryLight : colors.surface,
-                        borderColor: active ? colors.primary : colors.border,
+                        backgroundColor: active
+                          ? colors.primaryLight
+                          : colors.surface,
+                        borderColor: active
+                          ? colors.primary
+                          : colors.border,
                       },
                     ]}
                   >
@@ -213,6 +379,7 @@ export default function CreateVideoScreen({ navigation }) {
                       size={18}
                       color={active ? colors.primary : colors.textSecondary}
                     />
+
                     <Text
                       numberOfLines={1}
                       style={[
@@ -222,8 +389,13 @@ export default function CreateVideoScreen({ navigation }) {
                     >
                       {channel.name}
                     </Text>
+
                     {active && (
-                      <Ionicons name="checkmark-circle" size={19} color={colors.primary} />
+                      <Ionicons
+                        name="checkmark-circle"
+                        size={19}
+                        color={colors.primary}
+                      />
                     )}
                   </TouchableOpacity>
                 );
@@ -232,17 +404,29 @@ export default function CreateVideoScreen({ navigation }) {
           )}
         </GlassCard>
 
+        {/* VIDEO INFORMATION */}
         <GlassCard style={styles.formCard}>
           <View style={styles.sectionHeading}>
-            <View style={[styles.sectionIcon, { backgroundColor: colors.primaryLight }]}>
-              <Ionicons name="videocam-outline" size={19} color={colors.primary} />
+            <View style={[
+              styles.sectionIcon,
+              { backgroundColor: colors.primaryLight },
+            ]}>
+              <Ionicons
+                name="videocam-outline"
+                size={19}
+                color={colors.primary}
+              />
             </View>
+
             <Text style={[styles.sectionTitle, { color: colors.text }]}>
               Video Information
             </Text>
           </View>
 
-          <Text style={[styles.label, { color: colors.text }]}>Video Title *</Text>
+          <Text style={[styles.label, { color: colors.text }]}>
+            Video Title *
+          </Text>
+
           <TextInput
             value={title}
             onChangeText={setTitle}
@@ -258,7 +442,10 @@ export default function CreateVideoScreen({ navigation }) {
             ]}
           />
 
-          <Text style={[styles.label, { color: colors.text }]}>Description / Notes</Text>
+          <Text style={[styles.label, { color: colors.text }]}>
+            Description / Notes
+          </Text>
+
           <TextInput
             value={description}
             onChangeText={setDescription}
@@ -277,44 +464,123 @@ export default function CreateVideoScreen({ navigation }) {
             ]}
           />
 
+          {/* DATE PICKER */}
           <Text style={[styles.label, { color: colors.text }]}>
             Planned Upload Date
           </Text>
-          <View
+
+          <TouchableOpacity
+            activeOpacity={0.7}
+            onPress={() => setShowDatePicker(true)}
             style={[
               styles.dateInputContainer,
-              { backgroundColor: colors.surface, borderColor: colors.border },
+              {
+                backgroundColor: colors.surface,
+                borderColor: colors.border,
+              },
             ]}
           >
-            <Ionicons name="calendar-outline" size={19} color={colors.textMuted} />
-            <TextInput
-              value={uploadDate}
-              onChangeText={setUploadDate}
-              placeholder="YYYY-MM-DD (Optional)"
-              placeholderTextColor={colors.textMuted}
-              style={[styles.dateInput, { color: colors.text }]}
-              keyboardType="numbers-and-punctuation"
+            <Ionicons
+              name="calendar-outline"
+              size={20}
+              color={colors.primary}
             />
-          </View>
+
+            <Text
+              style={[
+                styles.dateDisplay,
+                {
+                  color: uploadDate ? colors.text : colors.textMuted,
+                },
+              ]}
+            >
+              {formatDisplayDate(uploadDate)}
+            </Text>
+
+            <Ionicons
+              name="chevron-down"
+              size={18}
+              color={colors.textSecondary}
+            />
+          </TouchableOpacity>
+
+          {uploadDate && (
+            <TouchableOpacity
+              onPress={() => setUploadDate(null)}
+              style={styles.clearDateButton}
+            >
+              <Ionicons
+                name="close-circle-outline"
+                size={15}
+                color={colors.danger}
+              />
+              <Text style={[styles.clearDateText, { color: colors.danger }]}>
+                Clear date
+              </Text>
+            </TouchableOpacity>
+          )}
+
+          {showDatePicker && (
+            <View style={[
+              styles.datePickerWrapper,
+              { backgroundColor: colors.surfaceSecondary },
+            ]}>
+              <DateTimePicker
+                value={uploadDate || new Date()}
+                mode="date"
+                display={Platform.OS === 'ios' ? 'inline' : 'default'}
+                onChange={handleDateChange}
+                themeVariant={isDark ? 'dark' : 'light'}
+              />
+
+              {Platform.OS === 'ios' && (
+                <TouchableOpacity
+                  onPress={() => setShowDatePicker(false)}
+                  style={[
+                    styles.dateDoneButton,
+                    { backgroundColor: colors.primary },
+                  ]}
+                >
+                  <Text style={styles.dateDoneText}>Done</Text>
+                </TouchableOpacity>
+              )}
+            </View>
+          )}
         </GlassCard>
 
+        {/* PROJECT SETTINGS */}
         <GlassCard style={styles.formCard}>
           <View style={styles.sectionHeading}>
-            <View style={[styles.sectionIcon, { backgroundColor: colors.primaryLight }]}>
-              <Ionicons name="options-outline" size={19} color={colors.primary} />
+            <View style={[
+              styles.sectionIcon,
+              { backgroundColor: colors.primaryLight },
+            ]}>
+              <Ionicons
+                name="options-outline"
+                size={19}
+                color={colors.primary}
+              />
             </View>
+
             <Text style={[styles.sectionTitle, { color: colors.text }]}>
               Project Settings
             </Text>
           </View>
 
-          <Text style={[styles.label, { color: colors.text }]}>Project Status</Text>
+          <Text style={[styles.label, { color: colors.text }]}>
+            Project Status
+          </Text>
+
           {renderOptions(STATUSES, status, setStatus)}
 
-          <Text style={[styles.label, { color: colors.text }]}>Priority Level</Text>
+          <Text style={[styles.label, { color: colors.text }]}>
+            Priority Level
+          </Text>
+
           {renderOptions(PRIORITIES, priority, setPriority)}
         </GlassCard>
 
+        {/* SAVE / UPDATE BUTTON */}
         <TouchableOpacity
           onPress={handleSave}
           disabled={saving || channels.length === 0}
@@ -326,11 +592,34 @@ export default function CreateVideoScreen({ navigation }) {
             },
           ]}
         >
-          <Ionicons name="add-circle-outline" size={21} color="#FFFFFF" />
+          <Ionicons
+            name={isEditing ? 'save-outline' : 'add-circle-outline'}
+            size={21}
+            color="#FFFFFF"
+          />
+
           <Text style={styles.saveButtonText}>
-            {saving ? 'Saving Project...' : 'Create Video Project'}
+            {saving
+              ? 'Saving Project...'
+              : isEditing
+                ? 'Update Video Project'
+                : 'Create Video Project'}
           </Text>
         </TouchableOpacity>
+
+        {isEditing && (
+          <TouchableOpacity
+            onPress={() => navigation.goBack()}
+            style={[
+              styles.cancelButton,
+              { borderColor: colors.border },
+            ]}
+          >
+            <Text style={[styles.cancelButtonText, { color: colors.textSecondary }]}>
+              Cancel Editing
+            </Text>
+          </TouchableOpacity>
+        )}
 
         <Text style={[styles.footerText, { color: colors.textMuted }]}>
           Your project is saved locally on this device.
@@ -344,36 +633,49 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
+
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+
   content: {
     paddingHorizontal: 20,
     paddingTop: 65,
     paddingBottom: 130,
   },
+
   eyebrow: {
     fontSize: 11,
     fontWeight: '700',
     letterSpacing: 2,
     marginBottom: 12,
   },
+
   heading: {
     fontSize: 30,
     fontWeight: '800',
   },
+
   subtitle: {
     fontSize: 14,
     lineHeight: 21,
     marginTop: 8,
     marginBottom: 25,
   },
+
   formCard: {
     marginBottom: 17,
   },
+
   sectionHeading: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 11,
     marginBottom: 20,
   },
+
   sectionIcon: {
     width: 38,
     height: 38,
@@ -381,16 +683,19 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
+
   sectionTitle: {
     fontSize: 16,
     fontWeight: '700',
   },
+
   label: {
     fontSize: 13,
     fontWeight: '700',
     marginBottom: 9,
     marginTop: 7,
   },
+
   input: {
     minHeight: 50,
     borderWidth: 1,
@@ -400,27 +705,68 @@ const styles = StyleSheet.create({
     fontSize: 14,
     marginBottom: 17,
   },
+
   descriptionInput: {
     minHeight: 105,
   },
+
   dateInputContainer: {
-    minHeight: 50,
+    minHeight: 54,
     borderWidth: 1,
     borderRadius: 13,
     paddingHorizontal: 14,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 10,
-    marginBottom: 12,
+    gap: 12,
+    marginBottom: 10,
   },
-  dateInput: {
+
+  dateDisplay: {
     flex: 1,
     fontSize: 14,
-    paddingVertical: 12,
+    fontWeight: '600',
   },
+
+  clearDateButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    alignSelf: 'flex-end',
+    gap: 5,
+    paddingVertical: 5,
+    marginBottom: 10,
+  },
+
+  clearDateText: {
+    fontSize: 12,
+    fontWeight: '600',
+  },
+
+  datePickerWrapper: {
+    borderRadius: 16,
+    padding: 10,
+    marginTop: 8,
+    marginBottom: 12,
+    alignItems: 'center',
+  },
+
+  dateDoneButton: {
+    alignSelf: 'stretch',
+    paddingVertical: 12,
+    borderRadius: 12,
+    alignItems: 'center',
+    marginTop: 8,
+  },
+
+  dateDoneText: {
+    color: '#FFFFFF',
+    fontSize: 14,
+    fontWeight: '700',
+  },
+
   channelList: {
     gap: 10,
   },
+
   channelOption: {
     minHeight: 48,
     borderWidth: 1,
@@ -430,47 +776,56 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 10,
   },
+
   channelOptionText: {
     flex: 1,
     fontSize: 13,
     fontWeight: '600',
   },
+
   emptyChannel: {
     borderRadius: 14,
     padding: 15,
     gap: 10,
   },
+
   emptyChannelText: {
     fontSize: 13,
     lineHeight: 20,
   },
+
   createChannelButton: {
     alignSelf: 'flex-start',
     paddingHorizontal: 15,
     paddingVertical: 10,
     borderRadius: 10,
   },
+
   createChannelText: {
     color: '#FFFFFF',
     fontSize: 12,
     fontWeight: '700',
   },
+
   optionsContainer: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 9,
     marginBottom: 18,
   },
+
   optionChip: {
     borderWidth: 1,
     borderRadius: 18,
     paddingHorizontal: 14,
     paddingVertical: 10,
   },
+
   optionText: {
     fontSize: 12,
     fontWeight: '600',
   },
+
   saveButton: {
     minHeight: 55,
     borderRadius: 16,
@@ -480,11 +835,27 @@ const styles = StyleSheet.create({
     gap: 10,
     marginTop: 5,
   },
+
   saveButtonText: {
     color: '#FFFFFF',
     fontSize: 15,
     fontWeight: '700',
   },
+
+  cancelButton: {
+    minHeight: 48,
+    borderRadius: 15,
+    borderWidth: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 12,
+  },
+
+  cancelButtonText: {
+    fontSize: 14,
+    fontWeight: '600',
+  },
+
   footerText: {
     fontSize: 11,
     textAlign: 'center',
