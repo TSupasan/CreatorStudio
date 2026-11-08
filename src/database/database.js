@@ -1,4 +1,4 @@
-import * as SQLite from 'expo-sqlite';
+﻿import * as SQLite from 'expo-sqlite';
 
 let db;
 
@@ -24,13 +24,12 @@ export async function getDatabase() {
         description TEXT,
         thumbnail_uri TEXT,
         upload_date TEXT,
+        upload_time TEXT,
         status TEXT DEFAULT 'Idea',
         priority TEXT DEFAULT 'Medium',
         created_at TEXT DEFAULT CURRENT_TIMESTAMP,
         completed_at TEXT,
-        FOREIGN KEY (channel_id)
-          REFERENCES channels(id)
-          ON DELETE CASCADE
+        FOREIGN KEY (channel_id) REFERENCES channels(id) ON DELETE CASCADE
       );
 
       CREATE TABLE IF NOT EXISTS tasks (
@@ -39,11 +38,17 @@ export async function getDatabase() {
         task_name TEXT NOT NULL,
         is_completed INTEGER DEFAULT 0,
         is_optional INTEGER DEFAULT 0,
-        FOREIGN KEY (video_id)
-          REFERENCES videos(id)
-          ON DELETE CASCADE
+        FOREIGN KEY (video_id) REFERENCES videos(id) ON DELETE CASCADE
       );
     `);
+
+    // Safe migration for databases created by earlier app versions.
+    const columns = await db.getAllAsync('PRAGMA table_info(videos)');
+    const hasUploadTime = columns.some((column) => column.name === 'upload_time');
+
+    if (!hasUploadTime) {
+      await db.execAsync('ALTER TABLE videos ADD COLUMN upload_time TEXT');
+    }
   }
 
   return db;

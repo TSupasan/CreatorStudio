@@ -1,45 +1,51 @@
-
-import React, { useEffect, useState } from 'react';
+﻿import React, { useCallback, useState } from 'react';
 import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  TouchableOpacity,
-  ActivityIndicator,
-  Alert,
+  View, Text, StyleSheet, ScrollView, TouchableOpacity,
+  ActivityIndicator, Alert, Image,
 } from 'react-native';
-
+import { useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../theme/ThemeContext';
 import GlassCard from '../components/GlassCard';
-import { getDatabase } from '../database/database';
-import { deleteVideo } from '../database/repositories/videoRepository';
+import { getVideoById, deleteVideo } from '../database/repositories/videoRepository';
+import { getTasksByVideoId, updateTaskStatus, getVideoProgress } from '../database/repositories/taskRepository';
+
+function countdown(video) {
+  if (video.status === 'Published') return 'Already published';
+  if (!video.upload_date) return 'No release date scheduled';
+  const time = video.upload_time || '23:59';
+  const target = new Date(`${video.upload_date}T${time}:00`);
+  const diff = target.getTime() - Date.now();
+  if (Number.isNaN(target.getTime())) return 'No release date scheduled';
+  if (diff < 0) return 'Release time has passed';
+  const days = Math.floor(diff / 86400000);
+  const hours = Math.floor((diff % 86400000) / 3600000);
+  const minutes = Math.floor((diff % 3600000) / 60000);
+  return `${days} days · ${hours} hours · ${minutes} minutes`;
+}
 
 export default function VideoDetailsScreen({ route, navigation }) {
   const { colors } = useTheme();
   const { videoId } = route.params;
-
   const [video, setVideo] = useState(null);
+  const [tasks, setTasks] = useState([]);
+  const [progress, setProgress] = useState({ total: 0, completed: 0, percentage: 0 });
   const [loading, setLoading] = useState(true);
+  const [updatingTaskId, setUpdatingTaskId] = useState(null);
 
-  useEffect(() => {
-    loadVideoDetails();
-  }, [videoId]);
-
-  const loadVideoDetails = async () => {
+  const loadDetails = async () => {
     try {
-      const db = await getDatabase();
-
-      const result = await db.getFirstAsync(
-        `SELECT videos.*, channels.name AS channel_name
-         FROM videos
-         INNER JOIN channels ON videos.channel_id = channels.id
-         WHERE videos.id = ?`,
-        [Number(videoId)]
-      );
-
-      setVideo(result);
+      setLoading(true);
+      const videoData = await getVideoById(videoId);
+      setVideo(videoData);
+      if (videoData) {
+        const [taskData, progressData] = await Promise.all([
+          getTasksByVideoId(videoId),
+          getVideoProgress(videoId),
+        ]);
+        setTasks(taskData);
+        setProgress(progressData);
+      }
     } catch (error) {
       console.error('Video details error:', error);
       Alert.alert('Error', 'Unable to load video details.');
@@ -48,377 +54,144 @@ export default function VideoDetailsScreen({ route, navigation }) {
     }
   };
 
-  const handleEdit = () => {
-    navigation.navigate('EditVideo', {
-      videoId: video.id,
-    });
-  };
+  useFocusEffect(useCallback(() => { loadDetails(); }, [videoId]));
 
-  const handleDelete = () => {
-    Alert.alert(
-      'Delete Project',
-      `Are you sure you want to delete "${video.title}"? This action cannot be undone.`,
-      [
-        {
-          text: 'Cancel',
-          style: 'cancel',
-        },
-        {
-          text: 'Delete',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              await deleteVideo(Number(videoId));
-
-              Alert.alert(
-                'Project Deleted',
-                'Your video project was deleted successfully.',
-                [
-                  {
-                    text: 'OK',
-                    onPress: () => navigation.goBack(),
-                  },
-                ]
-              );
-            } catch (error) {
-              console.error('Delete video error:', error);
-              Alert.alert('Error', 'Could not delete this project.');
-            }
-          },
-        },
-      ]
-    );
-  };
-
-  const getStatusColor = (status) => {
-    switch (status) {
-      case 'Published':
-        return colors.success;
-      case 'Ready to Publish':
-        return colors.secondary;
-      case 'Editing':
-        return colors.warning;
-      default:
-        return colors.primary;
+  const toggleTask = async (task) => {
+    if (updatingTaskId !== null) return;
+    try {
+      setUpdatingTaskId(task.id);
+      await updateTaskStatus(task.id, task.is_completed !== 1);
+      const [taskData, progressData] = await Promise.all([
+        getTasksByVideoId(videoId),
+        getVideoProgress(videoId),
+      ]);
+      setTasks(taskData);
+      setProgress(progressData);
+    } catch (error) {
+      Alert.alert('Error', 'Could not update this task.');
+    } finally {
+      setUpdatingTaskId(null);
     }
   };
 
-  if (loading) {
-    return (
-      <View style={[styles.center, { backgroundColor: colors.background }]}>
-        <ActivityIndicator size="large" color={colors.primary} />
-      </View>
-    );
-  }
+  const handleDelete = () => {
+    Alert.alert('Delete Project', `Delete "${video.title}"? This cannot be undone.`, [
+      { text: 'Cancel', style: 'cancel' },
+      { text: 'Delete', style: 'destructive', onPress: async () => {
+        try {
+          await deleteVideo(videoId);
+          navigation.goBack();
+        } catch (error) {
+          Alert.alert('Error', 'Could not delete this project.');
+        }
+      }},
+    ]);
+  };
 
-  if (!video) {
-    return (
-      <View style={[styles.center, { backgroundColor: colors.background }]}>
-        <Text style={{ color: colors.text }}>Video not found.</Text>
-        <TouchableOpacity onPress={() => navigation.goBack()}>
-          <Text style={{ color: colors.primary, marginTop: 15 }}>
-            Go Back
-          </Text>
-        </TouchableOpacity>
-      </View>
-    );
-  }
+  if (loading) return <View style={[styles.center, { backgroundColor: colors.background }]}><ActivityIndicator size="large" color={colors.primary} /></View>;
+  if (!video) return <View style={[styles.center, { backgroundColor: colors.background }]}><Text style={{ color: colors.text }}>Video not found.</Text></View>;
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <ScrollView showsVerticalScrollIndicator={false}>
         <View style={styles.header}>
-          <TouchableOpacity
-            onPress={() => navigation.goBack()}
-            style={[styles.backButton, { backgroundColor: colors.surface }]}
-          >
-            <Ionicons name="arrow-back" size={22} color={colors.text} />
-          </TouchableOpacity>
-
-          <Text style={[styles.headerTitle, { color: colors.text }]}>
-            Video Details
-          </Text>
-
-          <View style={{ width: 42 }} />
+          <TouchableOpacity onPress={() => navigation.goBack()} style={[styles.back, { backgroundColor: colors.surface }]}><Ionicons name="arrow-back" size={21} color={colors.text} /></TouchableOpacity>
+          <Text style={[styles.headerTitle, { color: colors.text }]}>Video Details</Text>
+          <View style={{ width: 40 }} />
         </View>
 
         <GlassCard padding={0}>
-          <View style={[
-            styles.thumbnail,
-            { backgroundColor: colors.surfaceSecondary }
-          ]}>
-            <Ionicons
-              name="videocam-outline"
-              size={48}
-              color={colors.textMuted}
-            />
-            <Text style={[styles.thumbnailText, { color: colors.textMuted }]}>
-              NO THUMBNAIL
-            </Text>
+          <View style={[styles.hero, { backgroundColor: colors.surfaceSecondary }]}>
+            {video.thumbnail_uri ? <Image source={{ uri: video.thumbnail_uri }} style={styles.heroImage} /> : <Ionicons name="videocam-outline" size={45} color={colors.textMuted} />}
           </View>
-
-          <View style={styles.videoInfo}>
-            <Text style={[styles.videoTitle, { color: colors.text }]}>
-              {video.title}
-            </Text>
-
-            <Text style={[styles.channelName, { color: colors.textSecondary }]}>
-              <Ionicons name="logo-youtube" size={15} color="#FF4444" />
-              {' '}{video.channel_name}
-            </Text>
-
-            <Text style={[styles.description, { color: colors.textSecondary }]}>
-              {video.description || 'No description added yet.'}
-            </Text>
+          <View style={{ padding: 17 }}>
+            <Text style={[styles.title, { color: colors.text }]}>{video.title}</Text>
+            <Text style={[styles.channel, { color: colors.textSecondary }]}>{video.channel_name}</Text>
+            <Text style={[styles.description, { color: colors.textSecondary }]}>{video.description || 'No description added yet.'}</Text>
           </View>
         </GlassCard>
 
-        <Text style={[styles.sectionTitle, { color: colors.text }]}>
-          Project Information
-        </Text>
-
+        <Text style={[styles.section, { color: colors.text }]}>Release Countdown</Text>
         <GlassCard>
-          <InfoRow
-            icon="calendar-outline"
-            label="Planned Upload"
-            value={video.upload_date || 'Not scheduled'}
-            colors={colors}
-          />
-
-          <InfoRow
-            icon="flag-outline"
-            label="Status"
-            value={video.status}
-            colors={colors}
-            valueColor={getStatusColor(video.status)}
-          />
-
-          <InfoRow
-            icon="alert-circle-outline"
-            label="Priority"
-            value={video.priority}
-            colors={colors}
-          />
-
-          <InfoRow
-            icon="time-outline"
-            label="Created"
-            value={video.created_at || 'Unknown'}
-            colors={colors}
-          />
-        </GlassCard>
-
-        <Text style={[styles.sectionTitle, { color: colors.text }]}>
-          Editing Progress
-        </Text>
-
-        <GlassCard>
-          <View style={styles.progressHeader}>
-            <Text style={[styles.progressLabel, { color: colors.text }]}>
-              Overall Progress
-            </Text>
-            <Text style={{ color: colors.primary, fontWeight: '700' }}>
-              Coming Soon
-            </Text>
+          <View style={styles.inline}>
+            <Ionicons name="time-outline" size={21} color={colors.primary} />
+            <Text style={[styles.countdown, { color: colors.text }]}>{countdown(video)}</Text>
           </View>
-
-          <View style={[
-            styles.progressTrack,
-            { backgroundColor: colors.surfaceSecondary }
-          ]}>
-            <View style={[
-              styles.progressFill,
-              { backgroundColor: colors.primary, width: '0%' }
-            ]} />
-          </View>
-
-          <Text style={[styles.progressNote, { color: colors.textMuted }]}>
-            Your editing checklist will appear here.
+          <Text style={[styles.meta, { color: colors.textSecondary }]}>
+            {video.upload_date ? `Planned: ${video.upload_date} ${video.upload_time || ''}` : 'Set a release date by editing this project.'}
           </Text>
         </GlassCard>
 
-        <View style={styles.actionContainer}>
-          <TouchableOpacity
-            style={[styles.editButton, { backgroundColor: colors.primary }]}
-            onPress={handleEdit}
-          >
-            <Ionicons name="create-outline" size={20} color="#FFFFFF" />
-            <Text style={styles.buttonText}>Edit Project</Text>
-          </TouchableOpacity>
+        <Text style={[styles.section, { color: colors.text }]}>Project Information</Text>
+        <GlassCard>
+          <InfoRow label="Status" value={video.status} colors={colors} />
+          <InfoRow label="Priority" value={video.priority} colors={colors} />
+          <InfoRow label="Created" value={video.created_at || 'Unknown'} colors={colors} />
+        </GlassCard>
 
-          <TouchableOpacity
-            style={[styles.deleteButton, { borderColor: colors.danger }]}
-            onPress={handleDelete}
-          >
-            <Ionicons name="trash-outline" size={20} color={colors.danger} />
-            <Text style={[styles.deleteText, { color: colors.danger }]}>
-              Delete Project
-            </Text>
-          </TouchableOpacity>
-        </View>
+        <Text style={[styles.section, { color: colors.text }]}>Editing Progress</Text>
+        <GlassCard>
+          <View style={styles.inlineBetween}>
+            <Text style={{ color: colors.text, fontWeight: '700' }}>Overall Progress</Text>
+            <Text style={{ color: colors.primary, fontSize: 20, fontWeight: '900' }}>{progress.percentage}%</Text>
+          </View>
+          <View style={[styles.track, { backgroundColor: colors.surfaceSecondary }]}>
+            <View style={[styles.fill, { width: `${progress.percentage}%`, backgroundColor: colors.primary }]} />
+          </View>
+          <Text style={[styles.meta, { color: colors.textSecondary }]}>{progress.completed} of {progress.total} selected tasks completed</Text>
+        </GlassCard>
 
+        <Text style={[styles.section, { color: colors.text }]}>Your Editing Tasks</Text>
+        <GlassCard>
+          {tasks.length === 0 ? <Text style={{ color: colors.textSecondary }}>No tasks selected. Edit this project to add tasks.</Text> : tasks.map((task, index) => {
+            const completed = task.is_completed === 1;
+            return <TouchableOpacity key={task.id} disabled={updatingTaskId === task.id} onPress={() => toggleTask(task)} style={[styles.task, index !== tasks.length - 1 && { borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: colors.border }]}>
+              <Ionicons name={completed ? 'checkbox' : 'square-outline'} size={23} color={completed ? colors.success : colors.textMuted} />
+              <Text style={[styles.taskText, { color: completed ? colors.textMuted : colors.text, textDecorationLine: completed ? 'line-through' : 'none' }]}>{task.task_name}</Text>
+              {updatingTaskId === task.id && <ActivityIndicator size="small" color={colors.primary} />}
+            </TouchableOpacity>;
+          })}
+          {progress.total > 0 && progress.percentage === 100 && <Text style={{ color: colors.success, fontWeight: '800', marginTop: 12 }}>All selected tasks completed!</Text>}
+        </GlassCard>
+
+        <TouchableOpacity onPress={() => navigation.navigate('EditVideo', { videoId: video.id })} style={[styles.editButton, { backgroundColor: colors.primary }]}>
+          <Ionicons name="create-outline" size={19} color="#fff" /><Text style={styles.buttonText}>Edit Project</Text>
+        </TouchableOpacity>
+        <TouchableOpacity onPress={handleDelete} style={[styles.deleteButton, { borderColor: colors.danger }]}>
+          <Ionicons name="trash-outline" size={19} color={colors.danger} /><Text style={{ color: colors.danger, fontWeight: '800' }}>Delete Project</Text>
+        </TouchableOpacity>
         <View style={{ height: 35 }} />
       </ScrollView>
     </View>
   );
 }
 
-function InfoRow({ icon, label, value, colors, valueColor }) {
-  return (
-    <View style={styles.infoRow}>
-      <View style={styles.infoLeft}>
-        <Ionicons name={icon} size={19} color={colors.primary} />
-        <Text style={[styles.infoLabel, { color: colors.textSecondary }]}>
-          {label}
-        </Text>
-      </View>
-
-      <Text style={[
-        styles.infoValue,
-        { color: valueColor || colors.text }
-      ]}>
-        {value}
-      </Text>
-    </View>
-  );
+function InfoRow({ label, value, colors }) {
+  return <View style={styles.infoRow}><Text style={{ color: colors.textSecondary }}>{label}</Text><Text style={{ color: colors.text, fontWeight: '700', textAlign: 'right', flexShrink: 1 }}>{value}</Text></View>;
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    paddingHorizontal: 20,
-  },
-  center: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginTop: 55,
-    marginBottom: 25,
-  },
-  backButton: {
-    width: 42,
-    height: 42,
-    borderRadius: 14,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  headerTitle: {
-    fontSize: 20,
-    fontWeight: '700',
-  },
-  thumbnail: {
-    height: 190,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderTopLeftRadius: 22,
-    borderTopRightRadius: 22,
-  },
-  thumbnailText: {
-    fontSize: 11,
-    fontWeight: '700',
-    marginTop: 10,
-    letterSpacing: 1.5,
-  },
-  videoInfo: {
-    padding: 18,
-  },
-  videoTitle: {
-    fontSize: 21,
-    fontWeight: '700',
-    marginBottom: 10,
-  },
-  channelName: {
-    fontSize: 14,
-    marginBottom: 15,
-  },
-  description: {
-    fontSize: 14,
-    lineHeight: 22,
-  },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: '700',
-    marginTop: 27,
-    marginBottom: 14,
-  },
-  infoRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: 13,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: '#88888840',
-  },
-  infoLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 9,
-  },
-  infoLabel: {
-    fontSize: 13,
-  },
-  infoValue: {
-    fontSize: 13,
-    fontWeight: '600',
-    flexShrink: 1,
-    textAlign: 'right',
-    marginLeft: 10,
-  },
-  progressHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 14,
-  },
-  progressLabel: {
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  progressTrack: {
-    height: 9,
-    borderRadius: 10,
-    overflow: 'hidden',
-  },
-  progressFill: {
-    height: '100%',
-    borderRadius: 10,
-  },
-  progressNote: {
-    fontSize: 12,
-    marginTop: 12,
-  },
-  actionContainer: {
-    marginTop: 25,
-    gap: 12,
-  },
-  editButton: {
-    height: 52,
-    borderRadius: 16,
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    gap: 9,
-  },
-  deleteButton: {
-    height: 52,
-    borderRadius: 16,
-    borderWidth: 1,
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    gap: 9,
-  },
-  buttonText: {
-    color: '#FFFFFF',
-    fontSize: 15,
-    fontWeight: '700',
-  },
-  deleteText: {
-    fontSize: 15,
-    fontWeight: '700',
-  },
+  container: { flex: 1, paddingHorizontal: 20 },
+  center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+  header: { marginTop: 55, marginBottom: 22, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  back: { width: 40, height: 40, borderRadius: 13, justifyContent: 'center', alignItems: 'center' },
+  headerTitle: { fontSize: 19, fontWeight: '800' },
+  hero: { height: 190, alignItems: 'center', justifyContent: 'center', overflow: 'hidden', borderTopLeftRadius: 22, borderTopRightRadius: 22 },
+  heroImage: { width: '100%', height: '100%', resizeMode: 'cover' },
+  title: { fontSize: 21, fontWeight: '900' },
+  channel: { fontSize: 13, marginTop: 7 },
+  description: { fontSize: 13, lineHeight: 21, marginTop: 13 },
+  section: { fontSize: 17, fontWeight: '800', marginTop: 24, marginBottom: 12 },
+  inline: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  inlineBetween: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
+  countdown: { fontSize: 15, fontWeight: '800', flex: 1 },
+  meta: { fontSize: 12, marginTop: 11 },
+  infoRow: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 12, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: '#88888840', gap: 12 },
+  track: { height: 9, borderRadius: 9, overflow: 'hidden' },
+  fill: { height: '100%', borderRadius: 9 },
+  task: { minHeight: 52, flexDirection: 'row', alignItems: 'center', gap: 11, paddingVertical: 10 },
+  taskText: { flex: 1, fontSize: 14, fontWeight: '600' },
+  editButton: { minHeight: 51, borderRadius: 15, flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 9, marginTop: 24 },
+  deleteButton: { minHeight: 51, borderRadius: 15, borderWidth: 1, flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 9, marginTop: 11 },
+  buttonText: { color: '#fff', fontWeight: '800' },
 });

@@ -1,5 +1,4 @@
-
-import { getDatabase } from '../database';
+﻿import { getDatabase } from '../database';
 
 export async function getAllVideos() {
   const db = await getDatabase();
@@ -16,10 +15,20 @@ export async function getVideosByChannel(channelId) {
   const db = await getDatabase();
 
   return await db.getAllAsync(
-    `SELECT * FROM videos
-     WHERE channel_id = ?
-     ORDER BY created_at DESC`,
+    `SELECT * FROM videos WHERE channel_id = ? ORDER BY created_at DESC`,
     [channelId]
+  );
+}
+
+export async function getVideoById(id) {
+  const db = await getDatabase();
+
+  return await db.getFirstAsync(
+    `SELECT videos.*, channels.name AS channel_name
+     FROM videos
+     INNER JOIN channels ON videos.channel_id = channels.id
+     WHERE videos.id = ?`,
+    [Number(id)]
   );
 }
 
@@ -28,15 +37,15 @@ export async function addVideo(video) {
 
   const result = await db.runAsync(
     `INSERT INTO videos
-     (channel_id, title, description, thumbnail_uri,
-      upload_date, status, priority)
-     VALUES (?, ?, ?, ?, ?, ?, ?)`,
+     (channel_id, title, description, thumbnail_uri, upload_date, upload_time, status, priority)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
     [
       video.channel_id,
       video.title,
       video.description || '',
       video.thumbnail_uri || null,
       video.upload_date || null,
+      video.upload_time || null,
       video.status || 'Idea',
       video.priority || 'Medium',
     ]
@@ -50,13 +59,8 @@ export async function updateVideo(id, video) {
 
   await db.runAsync(
     `UPDATE videos
-     SET channel_id = ?,
-         title = ?,
-         description = ?,
-         thumbnail_uri = ?,
-         upload_date = ?,
-         status = ?,
-         priority = ?
+     SET channel_id = ?, title = ?, description = ?, thumbnail_uri = ?,
+         upload_date = ?, upload_time = ?, status = ?, priority = ?
      WHERE id = ?`,
     [
       video.channel_id,
@@ -64,18 +68,15 @@ export async function updateVideo(id, video) {
       video.description || '',
       video.thumbnail_uri || null,
       video.upload_date || null,
+      video.upload_time || null,
       video.status || 'Idea',
       video.priority || 'Medium',
-      id,
+      Number(id),
     ]
   );
 }
 
 export async function deleteVideo(id) {
   const db = await getDatabase();
-
-  await db.runAsync(
-    'DELETE FROM videos WHERE id = ?',
-    [id]
-  );
+  await db.runAsync('DELETE FROM videos WHERE id = ?', [Number(id)]);
 }
