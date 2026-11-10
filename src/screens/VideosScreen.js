@@ -1,4 +1,4 @@
-﻿import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import {
   View, Text, StyleSheet, FlatList, TextInput, TouchableOpacity,
   StatusBar, Image,
@@ -31,6 +31,8 @@ export default function VideosScreen({ navigation }) {
   const [videos, setVideos] = useState([]);
   const [search, setSearch] = useState('');
   const [selectedFilter, setSelectedFilter] = useState('All');
+  const [selectedChannel, setSelectedChannel] = useState('All');
+  const [selectedPriority, setSelectedPriority] = useState('All');
   const [loading, setLoading] = useState(true);
 
   const loadVideos = async () => {
@@ -51,12 +53,52 @@ export default function VideosScreen({ navigation }) {
 
   useFocusEffect(useCallback(() => { loadVideos(); }, []));
 
+  const channelOptions = useMemo(() => {
+    const uniqueChannels = new Map();
+
+    videos.forEach((video) => {
+      const id = String(video.channel_id ?? video.channel_name ?? 'unknown');
+
+      if (!uniqueChannels.has(id)) {
+        uniqueChannels.set(id, {
+          id,
+          name: video.channel_name || 'Unknown channel',
+        });
+      }
+    });
+
+    return [
+      { id: 'All', name: 'All Channels' },
+      ...Array.from(uniqueChannels.values()).sort((a, b) =>
+        a.name.localeCompare(b.name)
+      ),
+    ];
+  }, [videos]);
+
+  const priorityOptions = ['All', 'High', 'Medium', 'Low'];
+
   const filteredVideos = useMemo(() => videos.filter((video) => {
-    const query = search.toLowerCase();
-    const matchesSearch = (video.title || '').toLowerCase().includes(query) ||
+    const query = search.trim().toLowerCase();
+
+    const matchesSearch =
+      (video.title || '').toLowerCase().includes(query) ||
       (video.channel_name || '').toLowerCase().includes(query);
-    return matchesSearch && (selectedFilter === 'All' || video.status === selectedFilter);
-  }), [videos, search, selectedFilter]);
+
+    const matchesStatus =
+      selectedFilter === 'All' || video.status === selectedFilter;
+
+    const channelId = String(
+      video.channel_id ?? video.channel_name ?? 'unknown'
+    );
+
+    const matchesChannel =
+      selectedChannel === 'All' || channelId === selectedChannel;
+
+    const matchesPriority =
+      selectedPriority === 'All' || video.priority === selectedPriority;
+
+    return matchesSearch && matchesStatus && matchesChannel && matchesPriority;
+  }), [videos, search, selectedFilter, selectedChannel, selectedPriority]);
 
   const statusColor = (status) => {
     if (status === 'Published') return colors.success;
@@ -135,7 +177,103 @@ export default function VideosScreen({ navigation }) {
                 <Text style={{ color: active ? '#fff' : colors.textSecondary, fontSize: 12, fontWeight: '700' }}>{item}</Text>
               </TouchableOpacity>;
             }} />
-          <Text style={[styles.sectionTitle, { color: colors.text }]}>Your Projects · {filteredVideos.length}</Text>
+          {/* ADVANCED FILTERS SECTION */}
+          <Text style={[styles.filterHeading, { color: colors.text }]}>
+            Filter by Channel
+          </Text>
+
+          <FlatList
+            horizontal
+            data={channelOptions}
+            keyExtractor={(item) => item.id}
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.advancedFilterList}
+            renderItem={({ item }) => {
+              const active = selectedChannel === item.id;
+
+              return (
+                <TouchableOpacity
+                  onPress={() => setSelectedChannel(item.id)}
+                  style={[
+                    styles.filter,
+                    {
+                      backgroundColor: active ? colors.primary : colors.surface,
+                      borderColor: active ? colors.primary : colors.border,
+                    },
+                  ]}
+                >
+                  <Text style={{
+                    color: active ? '#fff' : colors.textSecondary,
+                    fontSize: 12,
+                    fontWeight: '700',
+                  }}>
+                    {item.name}
+                  </Text>
+                </TouchableOpacity>
+              );
+            }}
+          />
+
+          <Text style={[styles.filterHeading, { color: colors.text }]}>
+            Filter by Priority
+          </Text>
+
+          <FlatList
+            horizontal
+            data={priorityOptions}
+            keyExtractor={(item) => item}
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.advancedFilterList}
+            renderItem={({ item }) => {
+              const active = selectedPriority === item;
+
+              return (
+                <TouchableOpacity
+                  onPress={() => setSelectedPriority(item)}
+                  style={[
+                    styles.filter,
+                    {
+                      backgroundColor: active ? colors.primary : colors.surface,
+                      borderColor: active ? colors.primary : colors.border,
+                    },
+                  ]}
+                >
+                  <Text style={{
+                    color: active ? '#fff' : colors.textSecondary,
+                    fontSize: 12,
+                    fontWeight: '700',
+                  }}>
+                    {item === 'All' ? 'All Priorities' : item}
+                  </Text>
+                </TouchableOpacity>
+              );
+            }}
+          />
+
+          {(search.length > 0 ||
+            selectedFilter !== 'All' ||
+            selectedChannel !== 'All' ||
+            selectedPriority !== 'All') && (
+            <TouchableOpacity
+              activeOpacity={0.7}
+              onPress={() => {
+                setSearch('');
+                setSelectedFilter('All');
+                setSelectedChannel('All');
+                setSelectedPriority('All');
+              }}
+              style={styles.clearFilters}
+            >
+              <Ionicons name="refresh-outline" size={15} color={colors.primary} />
+              <Text style={[styles.clearFiltersText, { color: colors.primary }]}>
+                Clear all filters
+              </Text>
+            </TouchableOpacity>
+          )}
+
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>
+            Your Projects Â· {filteredVideos.length}
+          </Text>
         </>}
         ListEmptyComponent={<View style={styles.empty}>
           <Ionicons name="videocam-outline" size={40} color={colors.textMuted} />
@@ -157,6 +295,16 @@ const styles = StyleSheet.create({
   searchInput: { flex: 1, fontSize: 14 },
   filterHeading: { fontSize: 14, fontWeight: '700', marginBottom: 11 },
   filter: { borderWidth: 1, borderRadius: 20, paddingHorizontal: 13, paddingVertical: 9 },
+  advancedFilterList: { gap: 8, paddingBottom: 16 },
+  clearFilters: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'flex-end',
+    gap: 5,
+    marginTop: -3,
+    marginBottom: 16,
+  },
+  clearFiltersText: { fontSize: 12, fontWeight: '700' },
   sectionTitle: { fontSize: 18, fontWeight: '800', marginBottom: 14 },
   card: { marginBottom: 13 },
   row: { flexDirection: 'row', gap: 12 },
