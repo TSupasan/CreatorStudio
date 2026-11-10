@@ -1,4 +1,4 @@
-﻿import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -139,6 +139,84 @@ export default function DashboardScreen() {
     }, [loadDashboardData])
   );
 
+  // VIDEO ANALYTICS SECTION
+  const statusAnalytics = [
+    { label: 'Idea', color: '#9A9A9A' },
+    { label: 'Planning', color: '#8B78FF' },
+    { label: 'Editing', color: '#F2A65A' },
+    { label: 'Ready to Publish', color: '#35BDE5' },
+    { label: 'Published', color: '#35C99A' },
+  ].map((item) => ({
+    ...item,
+    count: videos.filter((video) =>
+      (video.status || 'Idea') === item.label
+    ).length,
+  }));
+
+  const priorityAnalytics = [
+    { label: 'High', color: '#F26B6B' },
+    { label: 'Medium', color: '#F2A65A' },
+    { label: 'Low', color: '#35BDE5' },
+  ].map((item) => ({
+    ...item,
+    count: videos.filter((video) =>
+      (video.priority || 'Medium') === item.label
+    ).length,
+  }));
+
+  const publishedVideos = videos.filter(
+    (video) => video.status === 'Published'
+  );
+
+  const completionRate = videos.length > 0
+    ? Math.round((publishedVideos.length / videos.length) * 100)
+    : 0;
+
+  const monthlyAnalytics = Array.from({ length: 6 }, (_, index) => {
+    const date = new Date();
+    date.setDate(1);
+    date.setMonth(date.getMonth() - (5 - index));
+
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const key = `${year}-${month}`;
+
+    return {
+      key,
+      label: date.toLocaleDateString('en-US', { month: 'short' }),
+      count: publishedVideos.filter(
+        (video) => video.upload_date && video.upload_date.startsWith(key)
+      ).length,
+    };
+  });
+
+  const maxMonthlyCount = Math.max(
+    1,
+    ...monthlyAnalytics.map((item) => item.count)
+  );
+
+  const channelAnalytics = Object.values(
+    videos.reduce((groups, video) => {
+      const name = video.channel_name || 'Unknown channel';
+
+      if (!groups[name]) {
+        groups[name] = { name, total: 0, published: 0 };
+      }
+
+      groups[name].total += 1;
+
+      if (video.status === 'Published') {
+        groups[name].published += 1;
+      }
+
+      return groups;
+    }, {})
+  ).sort((a, b) => b.total - a.total);
+
+  const maxChannelCount = Math.max(
+    1,
+    ...channelAnalytics.map((item) => item.total)
+  );
   const renderVideoRow = (video, showDate = false) => {
     const statusColor = getStatusColor(video.status);
     const progress = video.progress || { total: 0, completed: 0, percentage: 0 };
@@ -229,6 +307,183 @@ export default function DashboardScreen() {
             ))}
           </View>
 
+          {/* VIDEO ANALYTICS SECTION */}
+          <View style={[styles.sectionHeader, { marginTop: 8 }]}>
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>
+              Content Analytics
+            </Text>
+            <Text style={[styles.sectionCaption, { color: colors.textMuted }]}>
+              INSIGHTS
+            </Text>
+          </View>
+
+          <GlassCard padding={17} style={styles.analyticsCard}>
+            <View style={styles.analyticsHeader}>
+              <View>
+                <Text style={[styles.analyticsTitle, { color: colors.text }]}>
+                  Publishing Progress
+                </Text>
+                <Text style={[styles.analyticsSubtitle, { color: colors.textSecondary }]}>
+                  Overall completion rate
+                </Text>
+              </View>
+              <View style={[styles.completionBadge, { backgroundColor: '#35C99A20' }]}>
+                <Ionicons name="trending-up" size={17} color="#35C99A" />
+                <Text style={styles.completionBadgeText}>{completionRate}%</Text>
+              </View>
+            </View>
+
+            <View style={[styles.analyticsTrack, { backgroundColor: colors.surfaceSecondary }]}>
+              <View
+                style={[
+                  styles.analyticsFill,
+                  { width: `${completionRate}%`, backgroundColor: '#35C99A' },
+                ]}
+              />
+            </View>
+
+            <Text style={[styles.analyticsFootnote, { color: colors.textSecondary }]}>
+              {publishedVideos.length} of {videos.length} videos published
+            </Text>
+          </GlassCard>
+
+          <GlassCard padding={17} style={styles.analyticsCard}>
+            <Text style={[styles.analyticsTitle, { color: colors.text }]}>
+              Video Status Distribution
+            </Text>
+            <Text style={[styles.analyticsSubtitle, { color: colors.textSecondary }]}>
+              Projects grouped by current status
+            </Text>
+
+            {statusAnalytics.map((item) => {
+              const percentage = videos.length > 0
+                ? (item.count / videos.length) * 100
+                : 0;
+
+              return (
+                <View key={item.label} style={styles.analyticsRow}>
+                  <View style={styles.analyticsLabelRow}>
+                    <View style={[styles.analyticsDot, { backgroundColor: item.color }]} />
+                    <Text style={[styles.analyticsLabel, { color: colors.text }]}>
+                      {item.label}
+                    </Text>
+                    <Text style={[styles.analyticsCount, { color: colors.textSecondary }]}>
+                      {item.count}
+                    </Text>
+                  </View>
+                  <View style={[styles.analyticsTrack, { backgroundColor: colors.surfaceSecondary }]}>
+                    <View
+                      style={[
+                        styles.analyticsFill,
+                        { width: `${percentage}%`, backgroundColor: item.color },
+                      ]}
+                    />
+                  </View>
+                </View>
+              );
+            })}
+          </GlassCard>
+
+          <GlassCard padding={17} style={styles.analyticsCard}>
+            <Text style={[styles.analyticsTitle, { color: colors.text }]}>
+              Priority Distribution
+            </Text>
+            <Text style={[styles.analyticsSubtitle, { color: colors.textSecondary }]}>
+              Video projects by priority level
+            </Text>
+
+            <View style={styles.priorityGrid}>
+              {priorityAnalytics.map((item) => (
+                <View
+                  key={item.label}
+                  style={[styles.priorityItem, { backgroundColor: colors.surfaceSecondary }]}
+                >
+                  <View style={[styles.analyticsDot, { backgroundColor: item.color }]} />
+                  <Text style={[styles.priorityCount, { color: colors.text }]}>
+                    {item.count}
+                  </Text>
+                  <Text style={[styles.priorityLabel, { color: colors.textSecondary }]}>
+                    {item.label}
+                  </Text>
+                </View>
+              ))}
+            </View>
+          </GlassCard>
+
+          <GlassCard padding={17} style={styles.analyticsCard}>
+            <Text style={[styles.analyticsTitle, { color: colors.text }]}>
+              Monthly Publishing Activity
+            </Text>
+            <Text style={[styles.analyticsSubtitle, { color: colors.textSecondary }]}>
+              Published videos over the last 6 months
+            </Text>
+
+            <View style={styles.monthlyChart}>
+              {monthlyAnalytics.map((item) => (
+                <View key={item.key} style={styles.monthColumn}>
+                  <Text style={[styles.monthCount, { color: colors.textSecondary }]}>
+                    {item.count}
+                  </Text>
+                  <View style={[styles.monthBarBackground, { backgroundColor: colors.surfaceSecondary }]}>
+                    <View
+                      style={[
+                        styles.monthBar,
+                        {
+                          height: `${(item.count / maxMonthlyCount) * 100}%`,
+                          backgroundColor: '#8B78FF',
+                        },
+                      ]}
+                    />
+                  </View>
+                  <Text style={[styles.monthLabel, { color: colors.textSecondary }]}>
+                    {item.label}
+                  </Text>
+                </View>
+              ))}
+            </View>
+          </GlassCard>
+
+          <GlassCard padding={17} style={styles.analyticsCard}>
+            <Text style={[styles.analyticsTitle, { color: colors.text }]}>
+              Channel Performance
+            </Text>
+            <Text style={[styles.analyticsSubtitle, { color: colors.textSecondary }]}>
+              Project activity across your channels
+            </Text>
+
+            {channelAnalytics.length > 0 ? (
+              channelAnalytics.map((item) => (
+                <View key={item.name} style={styles.channelAnalyticsRow}>
+                  <View style={styles.channelAnalyticsHeader}>
+                    <Text
+                      numberOfLines={1}
+                      style={[styles.channelAnalyticsName, { color: colors.text }]}
+                    >
+                      {item.name}
+                    </Text>
+                    <Text style={[styles.channelAnalyticsCount, { color: colors.textSecondary }]}>
+                      {item.published}/{item.total} published
+                    </Text>
+                  </View>
+                  <View style={[styles.analyticsTrack, { backgroundColor: colors.surfaceSecondary }]}>
+                    <View
+                      style={[
+                        styles.analyticsFill,
+                        {
+                          width: `${(item.total / maxChannelCount) * 100}%`,
+                          backgroundColor: '#35BDE5',
+                        },
+                      ]}
+                    />
+                  </View>
+                </View>
+              ))
+            ) : (
+              <Text style={[styles.analyticsFootnote, { color: colors.textSecondary }]}>
+                No channel data available yet.
+              </Text>
+            )}
+          </GlassCard>
           {loadError && (
             <GlassCard padding={15} style={styles.messageCard}>
               <Text style={[styles.emptyDescription, { color: colors.danger }]}>
@@ -337,5 +592,33 @@ const styles = StyleSheet.create({
   progressTrack: { height: 5, borderRadius: 5, overflow: 'hidden', marginTop: 7 },
   progressFill: { height: '100%', borderRadius: 5 },
   loadingState: { alignItems: 'center', paddingVertical: 20 },
+  analyticsCard: { marginBottom: 14, borderRadius: 20 },
+  analyticsHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  analyticsTitle: { fontSize: 15, fontWeight: '800' },
+  analyticsSubtitle: { fontSize: 11, marginTop: 5 },
+  completionBadge: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 11, paddingVertical: 8, borderRadius: 12, gap: 5 },
+  completionBadgeText: { color: '#35C99A', fontSize: 15, fontWeight: '800' },
+  analyticsTrack: { height: 7, borderRadius: 8, overflow: 'hidden', marginTop: 9 },
+  analyticsFill: { height: '100%', borderRadius: 8 },
+  analyticsFootnote: { fontSize: 11, marginTop: 10 },
+  analyticsRow: { marginTop: 16 },
+  analyticsLabelRow: { flexDirection: 'row', alignItems: 'center' },
+  analyticsDot: { width: 9, height: 9, borderRadius: 5, marginRight: 8 },
+  analyticsLabel: { flex: 1, fontSize: 12, fontWeight: '600' },
+  analyticsCount: { fontSize: 12, fontWeight: '700' },
+  priorityGrid: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 17, gap: 8 },
+  priorityItem: { flex: 1, borderRadius: 13, paddingVertical: 14, paddingHorizontal: 9, alignItems: 'center' },
+  priorityCount: { fontSize: 23, fontWeight: '800', marginTop: 7 },
+  priorityLabel: { fontSize: 11, marginTop: 3 },
+  monthlyChart: { height: 150, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-end', marginTop: 18 },
+  monthColumn: { flex: 1, alignItems: 'center', height: '100%', justifyContent: 'flex-end' },
+  monthCount: { fontSize: 10, fontWeight: '700', marginBottom: 6 },
+  monthBarBackground: { width: 19, height: 95, borderRadius: 7, overflow: 'hidden', justifyContent: 'flex-end' },
+  monthBar: { width: '100%', borderRadius: 7, minHeight: 0 },
+  monthLabel: { fontSize: 10, marginTop: 8 },
+  channelAnalyticsRow: { marginTop: 17 },
+  channelAnalyticsHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  channelAnalyticsName: { flex: 1, fontSize: 12, fontWeight: '700', marginRight: 8 },
+  channelAnalyticsCount: { fontSize: 10 },
   messageCard: { marginBottom: 18 },
 });
