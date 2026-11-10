@@ -1,4 +1,4 @@
-﻿import React, { useCallback, useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity,
   ActivityIndicator, Alert, Image,
@@ -9,6 +9,7 @@ import { useTheme } from '../theme/ThemeContext';
 import GlassCard from '../components/GlassCard';
 import { getVideoById, deleteVideo } from '../database/repositories/videoRepository';
 import { getTasksByVideoId, updateTaskStatus, getVideoProgress } from '../database/repositories/taskRepository';
+import { cancelVideoReminder } from '../services/notificationService';
 
 function countdown(video) {
   if (video.status === 'Published') return 'Already published';
@@ -80,6 +81,11 @@ export default function VideoDetailsScreen({ route, navigation }) {
       { text: 'Delete', style: 'destructive', onPress: async () => {
         try {
           await deleteVideo(videoId);
+          try {
+            await cancelVideoReminder(videoId);
+          } catch (notificationError) {
+            console.warn('Notification cancellation error:', notificationError);
+          }
           navigation.goBack();
         } catch (error) {
           Alert.alert('Error', 'Could not delete this project.');

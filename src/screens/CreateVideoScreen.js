@@ -18,6 +18,7 @@ import {
   saveVideoTasks,
   replaceVideoTasks,
 } from '../database/repositories/taskRepository';
+import { syncVideoReminder } from '../services/notificationService';
 
 const STATUSES = ['Idea', 'Planning', 'Editing', 'Ready to Publish', 'Published'];
 const PRIORITIES = ['Low', 'Medium', 'High'];
@@ -182,14 +183,23 @@ export default function CreateVideoScreen({ navigation, route }) {
     };
 
     try {
+      let savedVideoId;
+
       if (isEditing) {
-        await updateVideo(Number(videoId), videoData);
-        await replaceVideoTasks(Number(videoId), selectedTasks);
+        savedVideoId = Number(videoId);
+        await updateVideo(savedVideoId, videoData);
+        await replaceVideoTasks(savedVideoId, selectedTasks);
         Alert.alert('Project Updated', 'Your video project was updated successfully.');
       } else {
-        const newVideoId = await addVideo(videoData);
-        await saveVideoTasks(newVideoId, selectedTasks);
+        savedVideoId = await addVideo(videoData);
+        await saveVideoTasks(savedVideoId, selectedTasks);
         Alert.alert('Project Created', 'Your video project was saved successfully.');
+      }
+
+      try {
+        await syncVideoReminder(savedVideoId, videoData);
+      } catch (notificationError) {
+        console.error('Notification scheduling error:', notificationError);
       }
 
       navigation.setParams({ videoId: undefined });
