@@ -7,6 +7,7 @@ import {
   StatusBar,
   Animated,
   ActivityIndicator,
+  Pressable,
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -45,7 +46,7 @@ const getStatusColor = (status) => {
   }
 };
 
-export default function DashboardScreen() {
+export default function DashboardScreen({ navigation }) {
   const { colors, isDark } = useTheme();
   const fadeAnim = React.useRef(new Animated.Value(0)).current;
   const slideAnim = React.useRef(new Animated.Value(25)).current;
@@ -289,6 +290,24 @@ export default function DashboardScreen() {
               <Text style={styles.heroFooter}>Your ideas, organized.</Text>
             </View>
           </LinearGradient>
+
+          <Pressable
+            accessibilityRole="button"
+            onPress={() => navigation.navigate('BackupRestore')}
+            style={({ pressed }) => [styles.backupEntry, {
+              backgroundColor: pressed ? colors.primaryLight : colors.surface,
+              borderColor: colors.border,
+            }]}
+          >
+            <View style={[styles.backupEntryIcon, { backgroundColor: colors.primaryLight }]}>
+              <Ionicons name="cloud-download-outline" size={20} color={colors.primary} />
+            </View>
+            <View style={styles.backupEntryText}>
+              <Text style={[styles.backupEntryTitle, { color: colors.text }]}>Backup & Restore</Text>
+              <Text style={[styles.backupEntrySubtitle, { color: colors.textSecondary }]}>Save a local copy of your workspace</Text>
+            </View>
+            <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
+          </Pressable>
 
           <View style={styles.sectionHeader}>
             <Text style={[styles.sectionTitle, { color: colors.text }]}>Your Overview</Text>
@@ -567,6 +586,11 @@ const styles = StyleSheet.create({
   heroBottom: { flexDirection: 'row', alignItems: 'center', marginTop: 22 },
   heroIcon: { width: 32, height: 32, borderRadius: 11, backgroundColor: 'rgba(255,255,255,0.18)', alignItems: 'center', justifyContent: 'center' },
   heroFooter: { color: '#FFFFFF', fontSize: 11, fontWeight: '600', marginLeft: 10 },
+  backupEntry: { minHeight: 70, borderRadius: 18, borderWidth: 1, paddingHorizontal: 13, flexDirection: 'row', alignItems: 'center', marginTop: -12, marginBottom: 25 },
+  backupEntryIcon: { width: 42, height: 42, borderRadius: 13, alignItems: 'center', justifyContent: 'center', marginRight: 12 },
+  backupEntryText: { flex: 1 },
+  backupEntryTitle: { fontSize: 13, fontWeight: '800' },
+  backupEntrySubtitle: { fontSize: 10, marginTop: 4 },
   sectionHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 15, marginTop: 3 },
   sectionTitle: { fontSize: 18, fontWeight: '800', letterSpacing: -0.3 },
   sectionCaption: { fontSize: 9, fontWeight: '700', letterSpacing: 1 },
