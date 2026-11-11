@@ -1,4 +1,9 @@
 import * as Notifications from 'expo-notifications';
+import { getDatabase } from '../database/database';
+import {
+  getUploadRemindersEnabled as readUploadRemindersEnabled,
+  saveUploadRemindersEnabled,
+} from '../database/repositories/settingsRepository';
 
 const CHANNEL_ID = 'upload-reminders';
 
@@ -14,6 +19,34 @@ export async function cancelVideoReminder(videoId) {
   }
 }
 
+export async function setUploadRemindersEnabled(enabled) {
+  await saveUploadRemindersEnabled(enabled);
+
+  if (!enabled) {
+    const scheduled = await Notifications.getAllScheduledNotificationsAsync();
+    const reminders = scheduled.filter(
+      (item) => item.content?.data?.type === 'upload-reminder'
+    );
+    const results = await Promise.allSettled(
+      reminders.map((item) => Notifications.cancelScheduledNotificationAsync(item.identifier))
+    );
+    return { enabled: false, failed: results.filter((result) => result.status === 'rejected').length };
+  }
+
+  const db = await getDatabase();
+  const videos = await db.getAllAsync('SELECT * FROM videos');
+  let failed = 0;
+  for (const video of videos) {
+    try {
+      await syncVideoReminder(video.id, video);
+    } catch (error) {
+      failed += 1;
+      console.warn('Could not reschedule an upload reminder:', error);
+    }
+  }
+  return { enabled: true, failed };
+}
+
 async function requestNotificationPermission() {
   const current = await Notifications.getPermissionsAsync();
 
@@ -25,6 +58,10 @@ async function requestNotificationPermission() {
 
 export async function syncVideoReminder(videoId, video) {
   await cancelVideoReminder(videoId);
+
+  if (!(await readUploadRemindersEnabled())) {
+    return { scheduled: false, reason: 'reminders-disabled' };
+  }
 
   if (
     !video.upload_date ||

@@ -4,6 +4,7 @@ import React, {
   useContext,
   useEffect,
   useState,
+  useCallback,
 } from 'react';
 
 import {
@@ -14,17 +15,41 @@ import {
   lightColors,
   darkColors,
 } from './colors';
+import { getSavedThemeMode, saveThemeMode as persistThemeMode } from '../database/repositories/settingsRepository';
 
 const ThemeContext = createContext(null);
 
 export function ThemeProvider({ children }) {
   const systemTheme = useColorScheme();
 
-  const [themeMode, setThemeMode] = useState('system');
+  const [themeMode, setThemeModeState] = useState('system');
+  const [themeLoaded, setThemeLoaded] = useState(false);
 
   const [colors, setColors] = useState(
     systemTheme === 'dark' ? darkColors : lightColors
   );
+
+  useEffect(() => {
+    let isActive = true;
+
+    getSavedThemeMode()
+      .then((savedMode) => {
+        if (isActive) setThemeModeState(savedMode);
+      })
+      .catch((error) => console.warn('Could not load saved theme:', error))
+      .finally(() => {
+        if (isActive) setThemeLoaded(true);
+      });
+
+    return () => {
+      isActive = false;
+    };
+  }, []);
+
+  const setThemeMode = useCallback(async (mode) => {
+    await persistThemeMode(mode);
+    setThemeModeState(mode);
+  }, []);
 
   useEffect(() => {
     const activeTheme =
@@ -40,6 +65,7 @@ export function ThemeProvider({ children }) {
       value={{
         themeMode,
         setThemeMode,
+        themeLoaded,
         colors,
         isDark: colors === darkColors,
       }}

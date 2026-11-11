@@ -266,11 +266,16 @@ export default function DashboardScreen({ navigation }) {
               <Text style={[styles.welcome, { color: colors.textSecondary }]}>YOUR CREATIVE SPACE</Text>
               <Text style={[styles.pageTitle, { color: colors.text }]}>Dashboard</Text>
             </View>
-            <View style={styles.profileButton}>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Open Settings and Profile"
+              onPress={() => navigation.navigate('Settings')}
+              style={styles.profileButton}
+            >
               <LinearGradient colors={['#8B78FF', '#5946D8']} style={styles.profileGradient}>
-                <Ionicons name="person" size={21} color="#FFFFFF" />
+                <Ionicons name="settings-outline" size={21} color="#FFFFFF" />
               </LinearGradient>
-            </View>
+            </Pressable>
           </View>
 
           <LinearGradient

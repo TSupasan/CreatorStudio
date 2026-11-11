@@ -9,6 +9,7 @@ import CreateVideoScreen from '../screens/CreateVideoScreen';
 import VideoDetailsScreen from '../screens/VideoDetailsScreen';
 import CalendarScreen from '../screens/CalendarScreen';
 import BackupRestoreScreen from '../screens/BackupRestoreScreen';
+import SettingsScreen from '../screens/SettingsScreen';
 
 import CustomTabBar from './CustomTabBar';
 
@@ -54,6 +55,11 @@ export default function AppNavigator() {
       <Stack.Screen
         name="BackupRestore"
         component={BackupRestoreScreen}
+      />
+
+      <Stack.Screen
+        name="Settings"
+        component={SettingsScreen}
       />
     </Stack.Navigator>
   );
