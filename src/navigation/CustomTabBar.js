@@ -3,12 +3,12 @@ import React, { useEffect, useRef } from 'react';
 
 import {
   View,
-  Text,
   Pressable,
   StyleSheet,
   Animated,
   Platform,
 } from 'react-native';
+import Text from '../components/ThemedText';
 
 import { Ionicons } from '@expo/vector-icons';
 import { BlurView } from 'expo-blur';
@@ -67,7 +67,7 @@ function TabItem({ route, index, isFocused, onPress, colors }) {
   });
 
   const iconColor = isFocused
-    ? colors.primary
+    ? colors.primaryOnLight
     : colors.textMuted;
 
   const iconName = isFocused
@@ -127,13 +127,16 @@ export default function CustomTabBar({
   return (
     <View style={styles.wrapper}>
       <BlurView
-        intensity={isDark ? 55 : 75}
+        intensity={colors.blurIntensity}
         tint={isDark ? 'dark' : 'light'}
         style={[
           styles.tabBar,
           {
             borderColor: colors.border,
             backgroundColor: colors.tabBar,
+            borderRadius: colors.cardRadius + 3,
+            shadowColor: colors.shadowColor,
+            elevation: colors.cardElevation + 5,
           },
         ]}
       >
@@ -194,7 +197,6 @@ const styles = StyleSheet.create({
 
     ...Platform.select({
       ios: {
-        shadowColor: '#000000',
         shadowOpacity: 0.12,
         shadowRadius: 18,
         shadowOffset: {

@@ -2,14 +2,14 @@
 import React, { useCallback, useState } from 'react';
 import {
   View,
-  Text,
   StyleSheet,
   FlatList,
   TouchableOpacity,
-  TextInput,
   Alert,
   Image,
 } from 'react-native';
+import Text from '../components/ThemedText';
+import TextInput from '../components/ThemedTextInput';
 import * as ImagePicker from 'expo-image-picker';
 import * as FileSystem from 'expo-file-system/legacy';
 import { useFocusEffect } from '@react-navigation/native';
@@ -157,7 +157,7 @@ export default function ChannelsScreen({ navigation }) {
         <View style={[styles.channelIcon, { backgroundColor: colors.primaryLight }]}>
           {item.profile_image_uri
             ? <Image source={{ uri: item.profile_image_uri }} style={styles.channelLogo} />
-            : <Ionicons name="logo-youtube" size={25} color={colors.primary} />}
+            : <Ionicons name="logo-youtube" size={25} color={colors.primaryOnLight} />}
         </View>
 
         <View style={styles.channelInfo}>
@@ -179,7 +179,7 @@ export default function ChannelsScreen({ navigation }) {
           onPress={() => handleEditChannel(item)}
           style={styles.actionButton}
         >
-          <Ionicons name="create-outline" size={20} color={colors.primary} />
+          <Ionicons name="create-outline" size={20} color={colors.primaryText} />
         </TouchableOpacity>
 
         <TouchableOpacity
@@ -204,7 +204,7 @@ export default function ChannelsScreen({ navigation }) {
             <TouchableOpacity accessibilityRole="button" accessibilityLabel="Go back to Profile" onPress={() => navigation.goBack()} style={[styles.backButton, { backgroundColor: colors.surface, borderColor: colors.border }]}>
               <Ionicons name="arrow-back" size={20} color={colors.text} />
             </TouchableOpacity>
-            <Text style={[styles.eyebrow, { color: colors.primary }]}>
+            <Text style={[styles.eyebrow, { color: colors.primaryText }]}>
               YOUR CONTENT NETWORK
             </Text>
 
@@ -259,11 +259,11 @@ export default function ChannelsScreen({ navigation }) {
                 <View style={[styles.logoPreview, { backgroundColor: colors.primaryLight }]}>
                   {profileImageUri
                     ? <Image source={{ uri: profileImageUri }} style={styles.channelLogo} />
-                    : <Ionicons name="logo-youtube" size={22} color={colors.primary} />}
+                    : <Ionicons name="logo-youtube" size={22} color={colors.primaryOnLight} />}
                 </View>
                 <View style={styles.logoActions}>
                   <TouchableOpacity onPress={chooseChannelLogo} style={[styles.logoButton, { borderColor: colors.border }]}>
-                    <Text style={[styles.logoButtonText, { color: colors.primary }]}>{profileImageUri ? 'Change logo' : 'Add channel logo'}</Text>
+                    <Text style={[styles.logoButtonText, { color: colors.primaryText }]}>{profileImageUri ? 'Change logo' : 'Add channel logo'}</Text>
                   </TouchableOpacity>
                   {profileImageUri ? <TouchableOpacity onPress={() => setProfileImageUri(null)} style={styles.removeLogoButton}><Text style={[styles.logoButtonText, { color: colors.danger }]}>Remove</Text></TouchableOpacity> : null}
                 </View>
@@ -279,10 +279,10 @@ export default function ChannelsScreen({ navigation }) {
                 <Ionicons
                   name={editingChannelId !== null ? 'save-outline' : 'add'}
                   size={21}
-                  color="#FFFFFF"
+                  color={colors.onPrimary}
                 />
 
-                <Text style={styles.addButtonText}>
+                <Text style={[styles.addButtonText, { color: colors.onPrimary }]}>
                   {editingChannelId !== null
                     ? 'Update Channel'
                     : 'Add Channel'}
@@ -306,7 +306,7 @@ export default function ChannelsScreen({ navigation }) {
                 Your Channels
               </Text>
 
-              <Text style={[styles.count, { color: colors.primary }]}>
+              <Text style={[styles.count, { color: colors.primaryText }]}>
                 {channels.length} CHANNELS
               </Text>
             </View>
@@ -389,7 +389,6 @@ const styles = StyleSheet.create({
     gap: 7,
   },
   addButtonText: {
-    color: '#FFFFFF',
     fontSize: 14,
     fontWeight: '700',
   },

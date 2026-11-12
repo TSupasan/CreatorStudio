@@ -3,9 +3,9 @@ import React from 'react';
 
 import {
   View,
-  Text,
   StyleSheet,
 } from 'react-native';
+import Text from './ThemedText';
 
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../theme/ThemeContext';
@@ -29,7 +29,7 @@ export default function ComingSoonScreen({ title, icon }) {
         <Ionicons
           name={icon}
           size={38}
-          color={colors.primary}
+          color={colors.primaryOnLight}
         />
       </View>
 
@@ -53,7 +53,7 @@ export default function ComingSoonScreen({ title, icon }) {
           { backgroundColor: colors.surfaceSecondary },
         ]}
       >
-        <Text style={[styles.badgeText, { color: colors.primary }]}>
+        <Text style={[styles.badgeText, { color: colors.primaryOnLight }]}>
           COMING SOON
         </Text>
       </View>

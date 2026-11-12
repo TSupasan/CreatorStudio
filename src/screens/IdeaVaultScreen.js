@@ -7,10 +7,10 @@ import {
   ScrollView,
   StatusBar,
   StyleSheet,
-  Text,
-  TextInput,
   View,
 } from 'react-native';
+import Text from '../components/ThemedText';
+import TextInput from '../components/ThemedTextInput';
 import { useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import GlassCard from '../components/GlassCard';
@@ -29,18 +29,14 @@ import {
 import { getAllChannels } from '../database/repositories/channelRepository';
 import { useTheme } from '../theme/ThemeContext';
 import { useWorkspace } from '../context/WorkspaceContext';
+import { useAppPreferences } from '../context/AppPreferencesContext';
+import { formatStoredDate } from '../utils/datePreferences';
 
 const STATUS_FILTERS = ['All', 'New', 'Selected', 'Planned', 'Converted'];
 
-function formatDate(value) {
-  if (!value) return '';
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return value;
-  return date.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
-}
-
 export default function IdeaVaultScreen({ navigation }) {
   const { colors, isDark } = useTheme();
+  const { preferences } = useAppPreferences();
   const { channelId: workspaceChannelId, selectedChannel, refreshWorkspace } = useWorkspace();
   const [ideas, setIdeas] = useState([]);
   const [categories, setCategories] = useState([]);
@@ -243,7 +239,7 @@ export default function IdeaVaultScreen({ navigation }) {
           {tags.length > 0 ? (
             <View style={styles.tagRow}>
               {tags.slice(0, 5).map((tag) => (
-                <Text key={`${item.id}-${tag}`} style={[styles.tag, { color: colors.primary, backgroundColor: colors.primaryLight }]}>{tag}</Text>
+                <Text key={`${item.id}-${tag}`} style={[styles.tag, { color: colors.primaryOnLight, backgroundColor: colors.primaryLight }]}>{tag}</Text>
               ))}
             </View>
           ) : null}
@@ -268,8 +264,8 @@ export default function IdeaVaultScreen({ navigation }) {
             </View>
           ) : (
             <Pressable accessibilityRole="button" onPress={() => startConversion(item)} style={[styles.convertButton, { backgroundColor: colors.primaryLight }]}>
-              <Ionicons name="videocam-outline" size={16} color={colors.primary} />
-              <Text style={[styles.convertText, { color: colors.primary }]}>Convert to Video</Text>
+              <Ionicons name="videocam-outline" size={16} color={colors.primaryOnLight} />
+              <Text style={[styles.convertText, { color: colors.primaryOnLight }]}>Convert to Video</Text>
             </Pressable>
           )}
           <Pressable accessibilityRole="button" accessibilityLabel={`Delete ${item.title}`} onPress={() => confirmDeleteIdea(item)} hitSlop={8} style={styles.deleteButton}>
@@ -287,12 +283,12 @@ export default function IdeaVaultScreen({ navigation }) {
           <Ionicons name="arrow-back" size={20} color={colors.text} />
         </Pressable>
         <View style={styles.headerText}>
-          <Text style={[styles.eyebrow, { color: colors.primary }]}>YOUR CREATIVE LIBRARY</Text>
+          <Text style={[styles.eyebrow, { color: colors.primaryText }]}>YOUR CREATIVE LIBRARY</Text>
           <Text style={[styles.title, { color: colors.text }]}>Idea Vault</Text>
           <Text style={[styles.subtitle, { color: colors.textSecondary }]}>Keep promising concepts organized and ready to grow.</Text>
         </View>
         <Pressable accessibilityRole="button" accessibilityLabel="Create idea" onPress={() => navigation.navigate('IdeaEditor')} style={[styles.addButton, { backgroundColor: colors.primary }]}>
-          <Ionicons name="add" size={24} color="#FFFFFF" />
+          <Ionicons name="add" size={24} color={colors.onPrimary} />
         </Pressable>
       </View>
 
@@ -304,11 +300,11 @@ export default function IdeaVaultScreen({ navigation }) {
 
       <View style={styles.manageRow}>
         <Pressable onPress={() => setCategoryModalVisible(true)} style={[styles.manageButton, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-          <Ionicons name="albums-outline" size={16} color={colors.primary} />
+          <Ionicons name="albums-outline" size={16} color={colors.primaryText} />
           <Text style={[styles.manageText, { color: colors.text }]}>Categories</Text>
         </Pressable>
         <Pressable onPress={() => setSeriesModalVisible(true)} style={[styles.manageButton, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-          <Ionicons name="layers-outline" size={16} color={colors.primary} />
+          <Ionicons name="layers-outline" size={16} color={colors.primaryText} />
           <Text style={[styles.manageText, { color: colors.text }]}>Series</Text>
         </Pressable>
       </View>
@@ -319,7 +315,7 @@ export default function IdeaVaultScreen({ navigation }) {
           const selected = seriesFilter === item.id;
           return (
             <Pressable key={item.id === null ? 'all-series' : `series-${item.id}`} onPress={() => setSeriesFilter(item.id)} style={[styles.filterChip, { borderColor: selected ? colors.primary : colors.border, backgroundColor: selected ? colors.primaryLight : colors.surface }]}>
-              <Text style={[styles.filterChipText, { color: selected ? colors.primary : colors.textSecondary }]}>{item.name}</Text>
+              <Text style={[styles.filterChipText, { color: selected ? colors.primaryOnLight : colors.textSecondary }]}>{item.name}</Text>
             </Pressable>
           );
         })}
@@ -336,14 +332,14 @@ export default function IdeaVaultScreen({ navigation }) {
           const selected = channelFilter === item.id;
           return (
             <Pressable key={`channel-${item.id}`} onPress={() => setChannelFilter({ workspaceId: workspaceChannelId, id: item.id })} style={[styles.filterChip, { borderColor: selected ? colors.primary : colors.border, backgroundColor: selected ? colors.primaryLight : colors.surface }]}>
-              <Text style={[styles.filterChipText, { color: selected ? colors.primary : colors.textSecondary }]}>{item.name}</Text>
+              <Text style={[styles.filterChipText, { color: selected ? colors.primaryOnLight : colors.textSecondary }]}>{item.name}</Text>
             </Pressable>
           );
         })}
       </ScrollView>
       {channels.length === 0 ? (
         <Pressable onPress={() => navigation.navigate('ManageChannels')} style={styles.channelManagementLink}>
-          <Text style={[styles.channelManagementText, { color: colors.primary }]}>No channels available · Open channel management</Text>
+          <Text style={[styles.channelManagementText, { color: colors.primaryText }]}>No channels available · Open channel management</Text>
         </Pressable>
       ) : null}
       </> : <Text style={[styles.activeWorkspaceLabel, { color: colors.textMuted }]}>CHANNEL · {selectedChannel?.name || 'Selected channel'}</Text>}
@@ -354,7 +350,7 @@ export default function IdeaVaultScreen({ navigation }) {
           const selected = statusFilter === status;
           return (
             <Pressable key={status} onPress={() => setStatusFilter(status)} style={[styles.filterChip, { borderColor: selected ? colors.primary : colors.border, backgroundColor: selected ? colors.primaryLight : colors.surface }]}>
-              <Text style={[styles.filterChipText, { color: selected ? colors.primary : colors.textSecondary }]}>{status}</Text>
+              <Text style={[styles.filterChipText, { color: selected ? colors.primaryOnLight : colors.textSecondary }]}>{status}</Text>
             </Pressable>
           );
         })}
@@ -376,7 +372,7 @@ export default function IdeaVaultScreen({ navigation }) {
         ListHeaderComponent={listHeader}
         ListEmptyComponent={!loading ? (
           <View style={[styles.emptyState, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-            <View style={[styles.emptyIcon, { backgroundColor: colors.primaryLight }]}><Ionicons name="bulb-outline" size={27} color={colors.primary} /></View>
+            <View style={[styles.emptyIcon, { backgroundColor: colors.primaryLight }]}><Ionicons name="bulb-outline" size={27} color={colors.primaryOnLight} /></View>
             <Text style={[styles.emptyTitle, { color: colors.text }]}>{ideas.length ? 'No matching ideas' : 'Your Idea Vault is ready'}</Text>
             <Text style={[styles.emptyDescription, { color: colors.textSecondary }]}>{ideas.length ? 'Try another search or filter.' : 'Save a video concept here, then turn it into a project whenever you are ready.'}</Text>
           </View>
@@ -387,7 +383,7 @@ export default function IdeaVaultScreen({ navigation }) {
       />
 
       <Modal visible={categoryModalVisible} transparent animationType="slide" onRequestClose={() => setCategoryModalVisible(false)}>
-        <View style={styles.modalOverlay}>
+        <View style={[styles.modalOverlay, { backgroundColor: colors.modalOverlay }]}>
           <View style={[styles.modalCard, { backgroundColor: colors.surface }]}>
             <View style={styles.modalHeader}>
               <View><Text style={[styles.modalTitle, { color: colors.text }]}>Idea categories</Text><Text style={[styles.modalSubtitle, { color: colors.textSecondary }]}>Built-in and custom categories</Text></View>
@@ -395,7 +391,7 @@ export default function IdeaVaultScreen({ navigation }) {
             </View>
             <View style={styles.createRow}>
               <TextInput value={newCategoryName} onChangeText={setNewCategoryName} placeholder="New category name" placeholderTextColor={colors.textMuted} maxLength={40} style={[styles.modalInput, { backgroundColor: colors.background, color: colors.text, borderColor: colors.border }]} />
-              <Pressable onPress={addCategory} style={[styles.smallAddButton, { backgroundColor: colors.primary }]}><Ionicons name="add" size={21} color="#FFFFFF" /></Pressable>
+              <Pressable onPress={addCategory} style={[styles.smallAddButton, { backgroundColor: colors.primary, borderRadius: colors.buttonRadius }]}><Ionicons name="add" size={21} color={colors.onPrimary} /></Pressable>
             </View>
             <ScrollView style={styles.modalList}>
               {categories.map((category) => (
@@ -412,7 +408,7 @@ export default function IdeaVaultScreen({ navigation }) {
       </Modal>
 
       <Modal visible={seriesModalVisible} transparent animationType="slide" onRequestClose={() => setSeriesModalVisible(false)}>
-        <View style={styles.modalOverlay}>
+        <View style={[styles.modalOverlay, { backgroundColor: colors.modalOverlay }]}>
           <View style={[styles.modalCard, { backgroundColor: colors.surface }]}>
             <View style={styles.modalHeader}>
               <View><Text style={[styles.modalTitle, { color: colors.text }]}>Content series</Text><Text style={[styles.modalSubtitle, { color: colors.textSecondary }]}>Select a series to view its ideas</Text></View>
@@ -420,17 +416,17 @@ export default function IdeaVaultScreen({ navigation }) {
             </View>
             <TextInput value={newSeriesName} onChangeText={setNewSeriesName} placeholder="Series name" placeholderTextColor={colors.textMuted} maxLength={80} style={[styles.modalInput, { backgroundColor: colors.background, color: colors.text, borderColor: colors.border }]} />
             <TextInput value={newSeriesDescription} onChangeText={setNewSeriesDescription} placeholder="Description (optional)" placeholderTextColor={colors.textMuted} maxLength={180} style={[styles.modalInput, styles.seriesDescriptionInput, { backgroundColor: colors.background, color: colors.text, borderColor: colors.border }]} />
-            <Pressable onPress={addSeries} style={[styles.createSeriesButton, { backgroundColor: colors.primary }]}><Ionicons name="add-circle-outline" size={18} color="#FFFFFF" /><Text style={styles.createSeriesText}>Create series</Text></Pressable>
+            <Pressable onPress={addSeries} style={[styles.createSeriesButton, { backgroundColor: colors.primary, borderRadius: colors.buttonRadius }]}><Ionicons name="add-circle-outline" size={18} color={colors.onPrimary} /><Text style={[styles.createSeriesText, { color: colors.onPrimary }]}>Create series</Text></Pressable>
             <ScrollView style={styles.modalList}>
               <Pressable onPress={() => { setSeriesFilter(null); setSeriesModalVisible(false); }} style={[styles.modalListRow, { borderBottomColor: colors.border }]}>
                 <Text style={[styles.modalItemText, { color: colors.text }]}>All ideas</Text>
-                {seriesFilter === null ? <Ionicons name="checkmark-circle" size={19} color={colors.primary} /> : null}
+                {seriesFilter === null ? <Ionicons name="checkmark-circle" size={19} color={colors.primaryText} /> : null}
               </Pressable>
               {series.map((item) => (
                 <View key={item.id} style={[styles.modalListRow, { borderBottomColor: colors.border }]}>
                   <Pressable style={styles.seriesSelect} onPress={() => { setSeriesFilter(item.id); setSeriesModalVisible(false); }}>
                     <Text numberOfLines={1} style={[styles.modalItemText, { color: colors.text }]}>{item.name}</Text>
-                    {seriesFilter === item.id ? <Ionicons name="checkmark-circle" size={19} color={colors.primary} /> : null}
+                    {seriesFilter === item.id ? <Ionicons name="checkmark-circle" size={19} color={colors.primaryText} /> : null}
                   </Pressable>
                   <Pressable onPress={() => removeSeries(item)} hitSlop={10} style={styles.seriesDelete}><Ionicons name="trash-outline" size={17} color={colors.danger} /></Pressable>
                 </View>
@@ -492,7 +488,7 @@ const styles = StyleSheet.create({
   emptyIcon: { width: 58, height: 58, borderRadius: 20, alignItems: 'center', justifyContent: 'center', marginBottom: 13 },
   emptyTitle: { fontSize: 15, fontWeight: '800' },
   emptyDescription: { fontSize: 11, lineHeight: 18, textAlign: 'center', marginTop: 7, maxWidth: 270 },
-  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.45)', justifyContent: 'flex-end' },
+  modalOverlay: { flex: 1, justifyContent: 'flex-end' },
   modalCard: { maxHeight: '82%', minHeight: '55%', borderTopLeftRadius: 25, borderTopRightRadius: 25, paddingHorizontal: 20, paddingTop: 22, paddingBottom: 30 },
   modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 18 },
   modalTitle: { fontSize: 18, fontWeight: '800' },
@@ -506,7 +502,7 @@ const styles = StyleSheet.create({
   defaultLabel: { fontSize: 8, fontWeight: '800', letterSpacing: 0.8 },
   seriesDescriptionInput: { marginTop: 8 },
   createSeriesButton: { height: 43, borderRadius: 12, flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 7, marginTop: 10, marginBottom: 12 },
-  createSeriesText: { color: '#FFFFFF', fontSize: 11, fontWeight: '800' },
+  createSeriesText: { fontSize: 11, fontWeight: '800' },
   seriesSelect: { flex: 1, flexDirection: 'row', alignItems: 'center', minHeight: 38 },
   seriesDelete: { width: 38, minHeight: 38, justifyContent: 'center', alignItems: 'flex-end' },
   emptySeries: { fontSize: 11, textAlign: 'center', paddingVertical: 20 },

@@ -1,7 +1,6 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import {
   View,
-  Text,
   ScrollView,
   StyleSheet,
   StatusBar,
@@ -9,6 +8,7 @@ import {
   ActivityIndicator,
   Pressable,
 } from 'react-native';
+import Text from '../components/ThemedText';
 import { useFocusEffect } from '@react-navigation/native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
@@ -28,13 +28,13 @@ const getLocalDateString = () => {
   return `${year}-${month}-${day}`;
 };
 
-const getStatusColor = (status) => {
+const getStatusColor = (status, colors) => {
   switch (status) {
-    case 'Published': return '#35C99A';
-    case 'Ready to Publish': return '#35BDE5';
-    case 'Editing': return '#F2A65A';
-    case 'Planning': return '#8B78FF';
-    default: return '#9A9A9A';
+    case 'Published': return colors.statusPublished;
+    case 'Ready to Publish': return colors.statusReady;
+    case 'Editing': return colors.statusEditing;
+    case 'Planning': return colors.statusPlanning;
+    default: return colors.statusIdea;
   }
 };
 
@@ -48,11 +48,11 @@ export default function DashboardScreen({ navigation }) {
   const [videos, setVideos] = useState([]);
   const [upcomingVideos, setUpcomingVideos] = useState([]);
   const [recentVideos, setRecentVideos] = useState([]);
-  const [stats, setStats] = useState([
-    { title: 'Total Videos', value: '0', icon: 'videocam-outline', color: '#8B78FF' },
-    { title: 'In Progress', value: '0', icon: 'create-outline', color: '#F2A65A' },
-    { title: 'Scheduled', value: '0', icon: 'calendar-outline', color: '#35BDE5' },
-    { title: 'Published', value: '0', icon: 'checkmark-circle-outline', color: '#35C99A' },
+  const [stats, setStats] = useState(() => [
+    { title: 'Total Videos', value: '0', icon: 'videocam-outline', color: colors.primaryText },
+    { title: 'In Progress', value: '0', icon: 'create-outline', color: colors.statusPlanning },
+    { title: 'Scheduled', value: '0', icon: 'calendar-outline', color: colors.statusReady },
+    { title: 'Published', value: '0', icon: 'checkmark-circle-outline', color: colors.statusPublished },
   ]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState(false);
@@ -100,10 +100,10 @@ export default function DashboardScreen({ navigation }) {
       ).length;
 
       setStats([
-        { title: 'Total Videos', value: String(allVideos.length), icon: 'videocam-outline', color: '#8B78FF' },
-        { title: 'In Progress', value: String(inProgressCount), icon: 'create-outline', color: '#F2A65A' },
-        { title: 'Scheduled', value: String(scheduledCount), icon: 'calendar-outline', color: '#35BDE5' },
-        { title: 'Published', value: String(publishedCount), icon: 'checkmark-circle-outline', color: '#35C99A' },
+        { title: 'Total Videos', value: String(allVideos.length), icon: 'videocam-outline', color: colors.primaryText },
+        { title: 'In Progress', value: String(inProgressCount), icon: 'create-outline', color: colors.statusPlanning },
+        { title: 'Scheduled', value: String(scheduledCount), icon: 'calendar-outline', color: colors.statusReady },
+        { title: 'Published', value: String(publishedCount), icon: 'checkmark-circle-outline', color: colors.statusPublished },
       ]);
 
       const upcoming = videosWithProgress
@@ -128,7 +128,7 @@ export default function DashboardScreen({ navigation }) {
     } finally {
       setLoading(false);
     }
-  }, [selectedChannelId, refreshWorkspace]);
+  }, [selectedChannelId, refreshWorkspace, colors]);
 
   useFocusEffect(
     useCallback(() => {
@@ -138,11 +138,11 @@ export default function DashboardScreen({ navigation }) {
 
   // VIDEO ANALYTICS SECTION
   const statusAnalytics = [
-    { label: 'Idea', color: '#9A9A9A' },
-    { label: 'Planning', color: '#8B78FF' },
-    { label: 'Editing', color: '#F2A65A' },
-    { label: 'Ready to Publish', color: '#35BDE5' },
-    { label: 'Published', color: '#35C99A' },
+    { label: 'Idea', color: colors.statusIdea },
+    { label: 'Planning', color: colors.statusPlanning },
+    { label: 'Editing', color: colors.statusEditing },
+    { label: 'Ready to Publish', color: colors.statusReady },
+    { label: 'Published', color: colors.statusPublished },
   ].map((item) => ({
     ...item,
     count: videos.filter((video) =>
@@ -151,9 +151,9 @@ export default function DashboardScreen({ navigation }) {
   }));
 
   const priorityAnalytics = [
-    { label: 'High', color: '#F26B6B' },
-    { label: 'Medium', color: '#F2A65A' },
-    { label: 'Low', color: '#35BDE5' },
+    { label: 'High', color: colors.priorityHigh },
+    { label: 'Medium', color: colors.priorityMedium },
+    { label: 'Low', color: colors.priorityLow },
   ].map((item) => ({
     ...item,
     count: videos.filter((video) =>
@@ -215,13 +215,13 @@ export default function DashboardScreen({ navigation }) {
     ...channelAnalytics.map((item) => item.total)
   );
   const renderVideoRow = (video, showDate = false) => {
-    const statusColor = getStatusColor(video.status);
+    const statusColor = getStatusColor(video.status, colors);
     const progress = video.progress || { total: 0, completed: 0, percentage: 0 };
 
     return (
       <View key={video.id} style={[styles.videoRow, { borderBottomColor: colors.border }]}>
         <View style={[styles.videoIcon, { backgroundColor: colors.primaryLight }]}>
-          <Ionicons name="videocam-outline" size={20} color={colors.primary} />
+          <Ionicons name="videocam-outline" size={20} color={colors.primaryOnLight} />
         </View>
         <View style={styles.videoInfo}>
           <Text numberOfLines={1} style={[styles.videoTitle, { color: colors.text }]}>
@@ -268,27 +268,27 @@ export default function DashboardScreen({ navigation }) {
               onPress={() => navigation.navigate('Profile')}
               style={styles.profileButton}
             >
-              <LinearGradient colors={['#8B78FF', '#5946D8']} style={styles.profileGradient}>
-                <Ionicons name="person-outline" size={21} color="#FFFFFF" />
+              <LinearGradient colors={colors.heroGradient} style={styles.profileGradient}>
+                <Ionicons name="person-outline" size={21} color={colors.heroText} />
               </LinearGradient>
             </Pressable>
           </View>
 
           <LinearGradient
-            colors={['#7562F6', '#5141C9', '#352B8C']}
+            colors={colors.heroGradient}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
             style={styles.heroCard}
           >
-            <View style={styles.heroDecoration} />
-            <Text style={styles.heroLabel}>CREATORSTUDIO</Text>
-            <Text style={styles.heroTitle}>Create something{'\n'}amazing today.</Text>
-            <Text style={styles.heroSubtitle}>Plan your content. Track your progress. Stay consistent.</Text>
+            <View style={[styles.heroDecoration, { backgroundColor: colors.heroDecoration }]} />
+            <Text style={[styles.heroLabel, { color: colors.heroMuted }]}>CREATORSTUDIO</Text>
+            <Text style={[styles.heroTitle, { color: colors.heroText }]}>Create something{'\n'}amazing today.</Text>
+            <Text style={[styles.heroSubtitle, { color: colors.heroMuted }]}>Plan your content. Track your progress. Stay consistent.</Text>
             <View style={styles.heroBottom}>
-              <View style={styles.heroIcon}>
-                <Ionicons name="sparkles" size={19} color="#FFFFFF" />
+              <View style={[styles.heroIcon, { backgroundColor: colors.heroIconBackground }]}>
+                <Ionicons name="sparkles" size={19} color={colors.heroText} />
               </View>
-              <Text style={styles.heroFooter}>Your ideas, organized.</Text>
+              <Text style={[styles.heroFooter, { color: colors.heroText }]}>Your ideas, organized.</Text>
             </View>
           </LinearGradient>
 
@@ -329,9 +329,9 @@ export default function DashboardScreen({ navigation }) {
                   Overall completion rate
                 </Text>
               </View>
-              <View style={[styles.completionBadge, { backgroundColor: '#35C99A20' }]}>
-                <Ionicons name="trending-up" size={17} color="#35C99A" />
-                <Text style={styles.completionBadgeText}>{completionRate}%</Text>
+              <View style={[styles.completionBadge, { backgroundColor: `${colors.success}20` }]}>
+                <Ionicons name="trending-up" size={17} color={colors.success} />
+                <Text style={[styles.completionBadgeText, { color: colors.success }]}>{completionRate}%</Text>
               </View>
             </View>
 
@@ -339,7 +339,7 @@ export default function DashboardScreen({ navigation }) {
               <View
                 style={[
                   styles.analyticsFill,
-                  { width: `${completionRate}%`, backgroundColor: '#35C99A' },
+                  { width: `${completionRate}%`, backgroundColor: colors.success },
                 ]}
               />
             </View>
@@ -432,7 +432,7 @@ export default function DashboardScreen({ navigation }) {
                         styles.monthBar,
                         {
                           height: `${(item.count / maxMonthlyCount) * 100}%`,
-                          backgroundColor: '#8B78FF',
+                          backgroundColor: colors.primary,
                         },
                       ]}
                     />
@@ -473,7 +473,7 @@ export default function DashboardScreen({ navigation }) {
                         styles.analyticsFill,
                         {
                           width: `${(item.total / maxChannelCount) * 100}%`,
-                          backgroundColor: '#35BDE5',
+                          backgroundColor: colors.secondary,
                         },
                       ]}
                     />
@@ -501,7 +501,7 @@ export default function DashboardScreen({ navigation }) {
           <GlassCard padding={15}>
             {loading ? (
               <View style={styles.loadingState}>
-                <ActivityIndicator color={colors.primary} />
+                <ActivityIndicator color={colors.primaryText} />
                 <Text style={[styles.emptyDescription, { color: colors.textSecondary }]}>Loading upcoming uploads...</Text>
               </View>
             ) : upcomingVideos.length > 0 ? (
@@ -509,7 +509,7 @@ export default function DashboardScreen({ navigation }) {
             ) : (
               <View style={styles.emptyState}>
                 <View style={[styles.emptyIcon, { backgroundColor: colors.primaryLight }]}>
-                  <Ionicons name="calendar-outline" size={27} color={colors.primary} />
+                  <Ionicons name="calendar-outline" size={27} color={colors.primaryOnLight} />
                 </View>
                 <Text style={[styles.emptyTitle, { color: colors.text }]}>Nothing scheduled yet</Text>
                 <Text style={[styles.emptyDescription, { color: colors.textSecondary }]}>
@@ -526,7 +526,7 @@ export default function DashboardScreen({ navigation }) {
           <GlassCard padding={15}>
             {loading ? (
               <View style={styles.loadingState}>
-                <ActivityIndicator color={colors.primary} />
+                <ActivityIndicator color={colors.primaryText} />
                 <Text style={[styles.emptyDescription, { color: colors.textSecondary }]}>Loading recent projects...</Text>
               </View>
             ) : recentVideos.length > 0 ? (
@@ -562,13 +562,13 @@ const styles = StyleSheet.create({
   profileButton: { width: 47, height: 47, borderRadius: 16, overflow: 'hidden' },
   profileGradient: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   heroCard: { borderRadius: 25, padding: 23, marginBottom: 30, overflow: 'hidden' },
-  heroDecoration: { position: 'absolute', width: 190, height: 190, borderRadius: 100, backgroundColor: 'rgba(255,255,255,0.07)', right: -65, top: -75 },
-  heroLabel: { color: '#D9D2FF', fontSize: 10, fontWeight: '800', letterSpacing: 2 },
-  heroTitle: { color: '#FFFFFF', fontSize: 27, fontWeight: '800', lineHeight: 34, marginTop: 16 },
-  heroSubtitle: { color: '#E0DCFF', fontSize: 12, lineHeight: 19, marginTop: 10, maxWidth: 245 },
+  heroDecoration: { position: 'absolute', width: 190, height: 190, borderRadius: 100, right: -65, top: -75 },
+  heroLabel: { fontSize: 10, fontWeight: '800', letterSpacing: 2 },
+  heroTitle: { fontSize: 27, fontWeight: '800', lineHeight: 34, marginTop: 16 },
+  heroSubtitle: { fontSize: 12, lineHeight: 19, marginTop: 10, maxWidth: 245 },
   heroBottom: { flexDirection: 'row', alignItems: 'center', marginTop: 22 },
-  heroIcon: { width: 32, height: 32, borderRadius: 11, backgroundColor: 'rgba(255,255,255,0.18)', alignItems: 'center', justifyContent: 'center' },
-  heroFooter: { color: '#FFFFFF', fontSize: 11, fontWeight: '600', marginLeft: 10 },
+  heroIcon: { width: 32, height: 32, borderRadius: 11, alignItems: 'center', justifyContent: 'center' },
+  heroFooter: { fontSize: 11, fontWeight: '600', marginLeft: 10 },
   backupEntry: { minHeight: 70, borderRadius: 18, borderWidth: 1, paddingHorizontal: 13, flexDirection: 'row', alignItems: 'center', marginTop: -12, marginBottom: 25 },
   backupEntryIcon: { width: 42, height: 42, borderRadius: 13, alignItems: 'center', justifyContent: 'center', marginRight: 12 },
   backupEntryText: { flex: 1 },
@@ -604,7 +604,7 @@ const styles = StyleSheet.create({
   analyticsTitle: { fontSize: 15, fontWeight: '800' },
   analyticsSubtitle: { fontSize: 11, marginTop: 5 },
   completionBadge: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 11, paddingVertical: 8, borderRadius: 12, gap: 5 },
-  completionBadgeText: { color: '#35C99A', fontSize: 15, fontWeight: '800' },
+  completionBadgeText: { fontSize: 15, fontWeight: '800' },
   analyticsTrack: { height: 7, borderRadius: 8, overflow: 'hidden', marginTop: 9 },
   analyticsFill: { height: '100%', borderRadius: 8 },
   analyticsFootnote: { fontSize: 11, marginTop: 10 },

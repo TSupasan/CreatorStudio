@@ -4,11 +4,11 @@ import {
   ScrollView,
   StatusBar,
   StyleSheet,
-  Text,
   TouchableOpacity,
   View,
   RefreshControl,
 } from 'react-native';
+import Text from '../components/ThemedText';
 import { useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 
@@ -17,20 +17,6 @@ import { useTheme } from '../theme/ThemeContext';
 import { useWorkspace } from '../context/WorkspaceContext';
 import { useAppPreferences } from '../context/AppPreferencesContext';
 import { formatStoredDate, formatStoredTime, getWeekdayLabels } from '../utils/datePreferences';
-
-const STATUS_COLORS = {
-  Idea: '#8B8B9B',
-  Planning: '#E6A23C',
-  Editing: '#4C9AFF',
-  'Ready to Publish': '#9B7CF6',
-  Published: '#39B982',
-};
-
-const PRIORITY_COLORS = {
-  Low: '#39B982',
-  Medium: '#E6A23C',
-  High: '#EF6464',
-};
 
 function formatDate(date) {
   const year = date.getFullYear();
@@ -47,7 +33,7 @@ function getMonthLabel(date) {
 }
 
 export default function CalendarScreen({ navigation }) {
-  const { theme, isDark } = useTheme();
+  const { colors, isDark } = useTheme();
   const { preferences } = useAppPreferences();
   const { channelId: workspaceChannelId, refreshWorkspace } = useWorkspace();
 
@@ -65,12 +51,12 @@ export default function CalendarScreen({ navigation }) {
 
   const [selectedDate, setSelectedDate] = useState(() => formatDate(new Date()));
 
-  const background = theme?.background || (isDark ? '#10111A' : '#F7F7FC');
-  const cardBackground = theme?.card || (isDark ? '#1C1D2A' : '#FFFFFF');
-  const textColor = theme?.text || (isDark ? '#FFFFFF' : '#202033');
-  const mutedColor = isDark ? '#9697A8' : '#85869A';
-  const borderColor = isDark ? '#303143' : '#E9E9F1';
-  const accentColor = '#8B70F5';
+  const background = colors.background;
+  const cardBackground = colors.glass;
+  const textColor = colors.text;
+  const mutedColor = colors.textSecondary;
+  const borderColor = colors.border;
+  const accentColor = colors.primary;
 
   const loadVideos = useCallback(async (showLoader = true) => {
     try {
@@ -223,7 +209,7 @@ export default function CalendarScreen({ navigation }) {
       width: 38,
       height: 38,
       borderRadius: 12,
-      backgroundColor: isDark ? '#29283B' : '#F1EEFF',
+      backgroundColor: colors.primaryLight,
       justifyContent: 'center',
       alignItems: 'center',
     },
@@ -268,7 +254,7 @@ export default function CalendarScreen({ navigation }) {
       fontWeight: '600',
     },
     selectedDayText: {
-      color: '#FFFFFF',
+      color: colors.onPrimary,
     },
     todayText: {
       color: accentColor,
@@ -281,7 +267,7 @@ export default function CalendarScreen({ navigation }) {
       marginTop: 2,
     },
     selectedDot: {
-      backgroundColor: '#FFFFFF',
+      backgroundColor: colors.onPrimary,
     },
     agendaHeader: {
       marginTop: 27,
@@ -364,7 +350,7 @@ export default function CalendarScreen({ navigation }) {
       marginTop: 6,
     },
     errorText: {
-      color: '#EF6464',
+      color: colors.danger,
       textAlign: 'center',
       marginVertical: 20,
     },
@@ -505,11 +491,19 @@ export default function CalendarScreen({ navigation }) {
           </View>
         ) : (
           selectedVideos.map(video => {
-            const statusColor =
-              STATUS_COLORS[video.status] || '#8B8B9B';
+            const statusColor = ({
+              Idea: colors.statusIdea,
+              Planning: colors.statusPlanning,
+              Editing: colors.statusEditing,
+              'Ready to Publish': colors.statusReady,
+              Published: colors.statusPublished,
+            })[video.status] || colors.statusIdea;
 
-            const priorityColor =
-              PRIORITY_COLORS[video.priority] || '#8B8B9B';
+            const priorityColor = ({
+              Low: colors.priorityLow,
+              Medium: colors.priorityMedium,
+              High: colors.priorityHigh,
+            })[video.priority] || colors.textMuted;
 
             return (
               <TouchableOpacity

@@ -5,9 +5,9 @@ import {
   ScrollView,
   StatusBar,
   StyleSheet,
-  Text,
   View,
 } from 'react-native';
+import Text from '../components/ThemedText';
 import { useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import GlassCard from '../components/GlassCard';
@@ -19,7 +19,7 @@ function WorkspaceAvatar({ channel, colors }) {
     <View style={[styles.workspaceAvatar, { backgroundColor: colors.primaryLight }]}>
       {channel?.profile_image_uri
         ? <Image source={{ uri: channel.profile_image_uri }} style={styles.channelImage} />
-        : <Ionicons name={channel ? 'logo-youtube' : 'apps-outline'} size={25} color={colors.primary} />}
+        : <Ionicons name={channel ? 'logo-youtube' : 'apps-outline'} size={25} color={colors.primaryOnLight} />}
     </View>
   );
 }
@@ -28,11 +28,11 @@ function QuickAction({ colors, icon, title, description, onPress, accent }) {
   return (
     <Pressable accessibilityRole="button" onPress={onPress} style={({ pressed }) => [styles.quickAction, { backgroundColor: pressed ? colors.surfaceSecondary : colors.surface, borderColor: colors.border }]}>
       <View style={[styles.quickIcon, { backgroundColor: accent }]}>
-        <Ionicons name={icon} size={21} color={colors.primary} />
+        <Ionicons name={icon} size={21} color={colors.primaryText} />
       </View>
       <Text style={[styles.quickTitle, { color: colors.text }]}>{title}</Text>
       <Text style={[styles.quickDescription, { color: colors.textSecondary }]}>{description}</Text>
-      <Ionicons name="arrow-forward" size={16} color={colors.primary} style={styles.quickArrow} />
+      <Ionicons name="arrow-forward" size={16} color={colors.primaryText} style={styles.quickArrow} />
     </Pressable>
   );
 }
@@ -41,7 +41,7 @@ function Shortcut({ colors, icon, title, onPress, last = false }) {
   return (
     <Pressable accessibilityRole="button" onPress={onPress} style={({ pressed }) => [styles.shortcut, { backgroundColor: pressed ? colors.surfaceSecondary : colors.surface, borderColor: colors.border }, last && styles.lastShortcut]}>
       <View style={[styles.shortcutIcon, { backgroundColor: colors.primaryLight }]}>
-        <Ionicons name={icon} size={18} color={colors.primary} />
+        <Ionicons name={icon} size={18} color={colors.primaryOnLight} />
       </View>
       <Text style={[styles.shortcutTitle, { color: colors.text }]}>{title}</Text>
       <Ionicons name="chevron-forward" size={17} color={colors.textMuted} />
@@ -70,7 +70,7 @@ export default function WorkspaceHomeScreen({ navigation }) {
             <Text style={[styles.title, { color: colors.text }]}>Your creative workspace</Text>
           </View>
           <Pressable accessibilityRole="button" accessibilityLabel="Open Profile" onPress={() => navigation.navigate('Profile')} style={[styles.profileButton, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-            <Ionicons name="person-outline" size={21} color={colors.primary} />
+            <Ionicons name="person-outline" size={21} color={colors.primaryText} />
           </Pressable>
         </View>
 
@@ -86,7 +86,7 @@ export default function WorkspaceHomeScreen({ navigation }) {
               </View>
             </View>
             <View style={[styles.switchIcon, { backgroundColor: colors.primaryLight }]}>
-              <Ionicons name="swap-horizontal" size={18} color={colors.primary} />
+              <Ionicons name="swap-horizontal" size={18} color={colors.primaryOnLight} />
             </View>
           </GlassCard>
         </Pressable>

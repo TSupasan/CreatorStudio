@@ -9,10 +9,10 @@ import {
   ScrollView,
   StatusBar,
   StyleSheet,
-  Text,
-  TextInput,
   View,
 } from 'react-native';
+import Text from '../components/ThemedText';
+import TextInput from '../components/ThemedTextInput';
 import { useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import GlassCard from '../components/GlassCard';
@@ -40,7 +40,7 @@ function formatDate(value) {
 function SelectionModal({ visible, title, items, selectedId, onSelect, onClose, colors, emptyLabel, emptyMessage, emptyAction }) {
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
-      <View style={styles.modalOverlay}>
+      <View style={[styles.modalOverlay, { backgroundColor: colors.modalOverlay }]}>
         <View style={[styles.modalCard, { backgroundColor: colors.surface }]}>
           <View style={styles.modalHeader}>
             <Text style={[styles.modalTitle, { color: colors.text }]}>{title}</Text>
@@ -49,18 +49,18 @@ function SelectionModal({ visible, title, items, selectedId, onSelect, onClose, 
           <ScrollView style={styles.selectionList}>
             <Pressable onPress={() => onSelect(null)} style={[styles.selectionRow, { borderBottomColor: colors.border }]}>
               <Text style={[styles.selectionText, { color: colors.text }]}>{emptyLabel}</Text>
-              {selectedId === null ? <Ionicons name="checkmark-circle" size={19} color={colors.primary} /> : null}
+              {selectedId === null ? <Ionicons name="checkmark-circle" size={19} color={colors.primaryText} /> : null}
             </Pressable>
             {items.map((item) => (
               <Pressable key={item.id} onPress={() => onSelect(item.id)} style={[styles.selectionRow, { borderBottomColor: colors.border }]}>
                 <Text style={[styles.selectionText, { color: colors.text }]}>{item.name}</Text>
-                {selectedId === item.id ? <Ionicons name="checkmark-circle" size={19} color={colors.primary} /> : null}
+                {selectedId === item.id ? <Ionicons name="checkmark-circle" size={19} color={colors.primaryText} /> : null}
               </Pressable>
             ))}
             {items.length === 0 ? (
               <View style={styles.emptySelectionWrap}>
                 <Text style={[styles.emptySelection, { color: colors.textMuted }]}>{emptyMessage || 'Create one from the Idea Vault.'}</Text>
-                {emptyAction ? <Pressable onPress={emptyAction.onPress} style={styles.emptyAction}><Text style={[styles.emptyActionText, { color: colors.primary }]}>{emptyAction.label}</Text></Pressable> : null}
+                {emptyAction ? <Pressable onPress={emptyAction.onPress} style={styles.emptyAction}><Text style={[styles.emptyActionText, { color: colors.primaryText }]}>{emptyAction.label}</Text></Pressable> : null}
               </View>
             ) : null}
           </ScrollView>
@@ -206,7 +206,7 @@ export default function IdeaEditorScreen({ navigation, route }) {
   if (loading) {
     return (
       <View style={[styles.center, { backgroundColor: colors.background }]}>
-        <ActivityIndicator size="large" color={colors.primary} />
+        <ActivityIndicator size="large" color={colors.primaryText} />
       </View>
     );
   }
@@ -220,7 +220,7 @@ export default function IdeaEditorScreen({ navigation, route }) {
             <Ionicons name="arrow-back" size={21} color={colors.text} />
           </Pressable>
           <View style={styles.headerText}>
-            <Text style={[styles.eyebrow, { color: colors.primary }]}>{isEditing ? 'REFINE YOUR CONCEPT' : 'SAVE A NEW CONCEPT'}</Text>
+            <Text style={[styles.eyebrow, { color: colors.primaryText }]}>{isEditing ? 'REFINE YOUR CONCEPT' : 'SAVE A NEW CONCEPT'}</Text>
             <Text style={[styles.title, { color: colors.text }]}>{isEditing ? 'Edit Idea' : 'New Idea'}</Text>
           </View>
         </View>
@@ -286,14 +286,14 @@ export default function IdeaEditorScreen({ navigation, route }) {
           <Text style={[styles.sectionTitle, { color: colors.text }]}>Organization</Text>
           <Text style={[styles.label, { color: colors.text }]}>CATEGORY</Text>
           <Pressable onPress={() => setCategorySelectorVisible(true)} style={[styles.selectButton, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-            <Ionicons name="albums-outline" size={18} color={colors.primary} />
+            <Ionicons name="albums-outline" size={18} color={colors.primaryText} />
             <Text style={[styles.selectText, { color: selectedCategory ? colors.text : colors.textMuted }]}>{selectedCategory?.name || 'Choose a category'}</Text>
             <Ionicons name="chevron-down" size={17} color={colors.textMuted} />
           </Pressable>
 
           <Text style={[styles.label, { color: colors.text, marginTop: 16 }]}>CONTENT SERIES</Text>
           <Pressable onPress={() => setSeriesSelectorVisible(true)} style={[styles.selectButton, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-            <Ionicons name="layers-outline" size={18} color={colors.primary} />
+            <Ionicons name="layers-outline" size={18} color={colors.primaryText} />
             <Text style={[styles.selectText, { color: selectedSeries ? colors.text : colors.textMuted }]}>{selectedSeries?.name || 'No series'}</Text>
             <Ionicons name="chevron-down" size={17} color={colors.textMuted} />
           </Pressable>
@@ -301,12 +301,12 @@ export default function IdeaEditorScreen({ navigation, route }) {
           <Text style={[styles.label, { color: colors.text, marginTop: 16 }]}>CHANNEL (OPTIONAL)</Text>
           {workspaceChannelId !== null && !isEditing ? (
             <View style={[styles.selectButton, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-              <Ionicons name="logo-youtube" size={18} color={colors.primary} />
+              <Ionicons name="logo-youtube" size={18} color={colors.primaryText} />
               <Text style={[styles.selectText, { color: selectedChannel ? colors.text : colors.textMuted }]}>{selectedChannel?.name || 'Selected workspace channel'}</Text>
               <Ionicons name="lock-closed-outline" size={15} color={colors.textMuted} />
             </View>
           ) : <Pressable accessibilityRole="button" onPress={() => setChannelSelectorVisible(true)} style={[styles.selectButton, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-            <Ionicons name="logo-youtube" size={18} color={colors.primary} />
+            <Ionicons name="logo-youtube" size={18} color={colors.primaryText} />
             <Text style={[styles.selectText, { color: selectedChannel ? colors.text : colors.textMuted }]}>{selectedChannel?.name || 'No channel selected'}</Text>
             <Ionicons name="chevron-down" size={17} color={colors.textMuted} />
           </Pressable>}
@@ -317,7 +317,7 @@ export default function IdeaEditorScreen({ navigation, route }) {
               const active = form.status === status;
               return (
                 <Pressable key={status} accessibilityRole="radio" accessibilityState={{ checked: active, disabled: isLockedConverted }} disabled={isLockedConverted} onPress={() => updateField('status', status)} style={[styles.statusOption, { borderColor: active ? colors.primary : colors.border, backgroundColor: active ? colors.primaryLight : colors.surface }]}>
-                  <Text style={[styles.statusOptionText, { color: active ? colors.primary : colors.textSecondary }]}>{status}</Text>
+                  <Text style={[styles.statusOptionText, { color: active ? colors.primaryOnLight : colors.textSecondary }]}>{status}</Text>
                 </Pressable>
               );
             })}
@@ -340,8 +340,8 @@ export default function IdeaEditorScreen({ navigation, route }) {
         ) : null}
 
         <Pressable accessibilityRole="button" disabled={saving} onPress={save} style={({ pressed }) => [styles.saveButton, { backgroundColor: pressed ? colors.secondary : colors.primary, opacity: saving ? 0.7 : 1 }]}>
-          {saving ? <ActivityIndicator color="#FFFFFF" /> : <Ionicons name="checkmark-circle-outline" size={19} color="#FFFFFF" />}
-          <Text style={styles.saveButtonText}>{saving ? 'Saving...' : isEditing ? 'Save changes' : 'Save idea'}</Text>
+          {saving ? <ActivityIndicator color={colors.onPrimary} /> : <Ionicons name="checkmark-circle-outline" size={19} color={colors.onPrimary} />}
+          <Text style={[styles.saveButtonText, { color: colors.onPrimary }]}>{saving ? 'Saving...' : isEditing ? 'Save changes' : 'Save idea'}</Text>
         </Pressable>
       </ScrollView>
 
@@ -416,8 +416,8 @@ const styles = StyleSheet.create({
   convertedNotice: { flexDirection: 'row', gap: 8, borderRadius: 13, borderWidth: 1, padding: 12, marginBottom: 15, alignItems: 'center' },
   convertedNoticeText: { flex: 1, fontSize: 10, lineHeight: 15 },
   saveButton: { height: 49, borderRadius: 14, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, marginTop: 3 },
-  saveButtonText: { color: '#FFFFFF', fontSize: 13, fontWeight: '800' },
-  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.45)', justifyContent: 'flex-end' },
+  saveButtonText: { fontSize: 13, fontWeight: '800' },
+  modalOverlay: { flex: 1, justifyContent: 'flex-end' },
   modalCard: { maxHeight: '72%', minHeight: '40%', borderTopLeftRadius: 25, borderTopRightRadius: 25, paddingHorizontal: 20, paddingTop: 22, paddingBottom: 30 },
   modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 13 },
   modalTitle: { fontSize: 17, fontWeight: '800' },

@@ -12,6 +12,7 @@ import CalendarScreen from '../screens/CalendarScreen';
 import BackupRestoreScreen from '../screens/BackupRestoreScreen';
 import SettingsScreen from '../screens/SettingsScreen';
 import ProfileScreen from '../screens/ProfileScreen';
+import ThemeSelectionScreen from '../screens/ThemeSelectionScreen';
 import IdeaVaultScreen from '../screens/IdeaVaultScreen';
 import IdeaEditorScreen from '../screens/IdeaEditorScreen';
 
@@ -79,6 +80,11 @@ export default function AppNavigator() {
       <Stack.Screen
         name="Settings"
         component={SettingsScreen}
+      />
+
+      <Stack.Screen
+        name="ThemeSelection"
+        component={ThemeSelectionScreen}
       />
 
       <Stack.Screen

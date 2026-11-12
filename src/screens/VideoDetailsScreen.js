@@ -1,8 +1,9 @@
 import React, { useCallback, useState } from 'react';
 import {
-  View, Text, StyleSheet, ScrollView, TouchableOpacity,
+  View, StyleSheet, ScrollView, TouchableOpacity,
   ActivityIndicator, Alert, Image,
 } from 'react-native';
+import Text from '../components/ThemedText';
 import { useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../theme/ThemeContext';
@@ -97,7 +98,7 @@ export default function VideoDetailsScreen({ route, navigation }) {
     ]);
   };
 
-  if (loading) return <View style={[styles.center, { backgroundColor: colors.background }]}><ActivityIndicator size="large" color={colors.primary} /></View>;
+  if (loading) return <View style={[styles.center, { backgroundColor: colors.background }]}><ActivityIndicator size="large" color={colors.primaryText} /></View>;
   if (!video) return <View style={[styles.center, { backgroundColor: colors.background }]}><Text style={{ color: colors.text }}>Video not found.</Text></View>;
 
   return (
@@ -123,7 +124,7 @@ export default function VideoDetailsScreen({ route, navigation }) {
         <Text style={[styles.section, { color: colors.text }]}>Release Countdown</Text>
         <GlassCard>
           <View style={styles.inline}>
-            <Ionicons name="time-outline" size={21} color={colors.primary} />
+            <Ionicons name="time-outline" size={21} color={colors.primaryText} />
             <Text style={[styles.countdown, { color: colors.text }]}>{countdown(video)}</Text>
           </View>
           <Text style={[styles.meta, { color: colors.textSecondary }]}>
@@ -142,7 +143,7 @@ export default function VideoDetailsScreen({ route, navigation }) {
         <GlassCard>
           <View style={styles.inlineBetween}>
             <Text style={{ color: colors.text, fontWeight: '700' }}>Overall Progress</Text>
-            <Text style={{ color: colors.primary, fontSize: 20, fontWeight: '900' }}>{progress.percentage}%</Text>
+            <Text style={{ color: colors.primaryText, fontSize: 20, fontWeight: '900' }}>{progress.percentage}%</Text>
           </View>
           <View style={[styles.track, { backgroundColor: colors.surfaceSecondary }]}>
             <View style={[styles.fill, { width: `${progress.percentage}%`, backgroundColor: colors.primary }]} />
@@ -157,14 +158,14 @@ export default function VideoDetailsScreen({ route, navigation }) {
             return <TouchableOpacity key={task.id} disabled={updatingTaskId === task.id} onPress={() => toggleTask(task)} style={[styles.task, index !== tasks.length - 1 && { borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: colors.border }]}>
               <Ionicons name={completed ? 'checkbox' : 'square-outline'} size={23} color={completed ? colors.success : colors.textMuted} />
               <Text style={[styles.taskText, { color: completed ? colors.textMuted : colors.text, textDecorationLine: completed ? 'line-through' : 'none' }]}>{task.task_name}</Text>
-              {updatingTaskId === task.id && <ActivityIndicator size="small" color={colors.primary} />}
+              {updatingTaskId === task.id && <ActivityIndicator size="small" color={colors.primaryText} />}
             </TouchableOpacity>;
           })}
           {progress.total > 0 && progress.percentage === 100 && <Text style={{ color: colors.success, fontWeight: '800', marginTop: 12 }}>All selected tasks completed!</Text>}
         </GlassCard>
 
         <TouchableOpacity onPress={() => navigation.navigate('EditVideo', { videoId: video.id })} style={[styles.editButton, { backgroundColor: colors.primary }]}>
-          <Ionicons name="create-outline" size={19} color="#fff" /><Text style={styles.buttonText}>Edit Project</Text>
+          <Ionicons name="create-outline" size={19} color={colors.onPrimary} /><Text style={[styles.buttonText, { color: colors.onPrimary }]}>Edit Project</Text>
         </TouchableOpacity>
         <TouchableOpacity onPress={handleDelete} style={[styles.deleteButton, { borderColor: colors.danger }]}>
           <Ionicons name="trash-outline" size={19} color={colors.danger} /><Text style={{ color: colors.danger, fontWeight: '800' }}>Delete Project</Text>
@@ -195,12 +196,12 @@ const styles = StyleSheet.create({
   inlineBetween: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
   countdown: { fontSize: 15, fontWeight: '800', flex: 1 },
   meta: { fontSize: 12, marginTop: 11 },
-  infoRow: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 12, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: '#88888840', gap: 12 },
+  infoRow: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 12, borderBottomWidth: StyleSheet.hairlineWidth, gap: 12 },
   track: { height: 9, borderRadius: 9, overflow: 'hidden' },
   fill: { height: '100%', borderRadius: 9 },
   task: { minHeight: 52, flexDirection: 'row', alignItems: 'center', gap: 11, paddingVertical: 10 },
   taskText: { flex: 1, fontSize: 14, fontWeight: '600' },
   editButton: { minHeight: 51, borderRadius: 15, flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 9, marginTop: 24 },
   deleteButton: { minHeight: 51, borderRadius: 15, borderWidth: 1, flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 9, marginTop: 11 },
-  buttonText: { color: '#fff', fontWeight: '800' },
+  buttonText: { fontWeight: '800' },
 });

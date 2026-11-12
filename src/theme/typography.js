@@ -1,4 +1,6 @@
 
+import { Platform } from 'react-native';
+
 export const typography = {
   sizes: {
     xs: 11,
@@ -25,3 +27,19 @@ export const typography = {
     relaxed: 1.7,
   },
 };
+
+export function getTypographyStyle(style = 'default') {
+  if (style === 'modern') {
+    return {
+      fontFamily: Platform.OS === 'ios' ? 'Helvetica Neue' : 'sans-serif',
+      textStyle: { letterSpacing: 0.05 },
+    };
+  }
+  if (style === 'rounded') {
+    return {
+      fontFamily: Platform.OS === 'ios' ? 'Avenir Next' : 'sans-serif-rounded',
+      textStyle: { letterSpacing: 0.15 },
+    };
+  }
+  return { fontFamily: undefined, textStyle: {} };
+}

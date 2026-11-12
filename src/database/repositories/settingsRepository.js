@@ -1,5 +1,6 @@
 import SQLiteStorage from 'expo-sqlite/kv-store';
 import { getDatabase } from '../database';
+import { defaultVisualTheme, normalizeCustomHex, visualThemeNames } from '../../theme/colors';
 
 const storage = SQLiteStorage;
 const PROFILE_KEY = 'creatorstudio.profile.v1';
@@ -13,6 +14,9 @@ export const defaultAppPreferences = {
   weekStartsOn: 0,
   dateFormat: 'DMY',
   timeFormat: '12h',
+  visualTheme: defaultVisualTheme,
+  customAccent: null,
+  typographyStyle: 'default',
 };
 
 const REMINDER_INTERVALS = [15, 60, 1440];
@@ -24,6 +28,9 @@ function normalizeAppPreferences(value = {}) {
     weekStartsOn: Number(value.weekStartsOn) === 1 ? 1 : 0,
     dateFormat: ['DMY', 'MDY', 'YMD'].includes(value.dateFormat) ? value.dateFormat : 'DMY',
     timeFormat: value.timeFormat === '24h' ? '24h' : '12h',
+    visualTheme: visualThemeNames.includes(value.visualTheme) ? value.visualTheme : defaultVisualTheme,
+    customAccent: normalizeCustomHex(value.customAccent),
+    typographyStyle: ['default', 'modern', 'rounded'].includes(value.typographyStyle) ? value.typographyStyle : 'default',
   };
 }
 

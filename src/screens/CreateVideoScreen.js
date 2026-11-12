@@ -1,8 +1,10 @@
 import React, { useCallback, useState } from 'react';
 import {
-  View, Text, TextInput, TouchableOpacity, ScrollView, StyleSheet,
+  View, TouchableOpacity, ScrollView, StyleSheet,
   Alert, KeyboardAvoidingView, Platform, StatusBar, ActivityIndicator, Image,
 } from 'react-native';
+import Text from '../components/ThemedText';
+import TextInput from '../components/ThemedTextInput';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import * as ImagePicker from 'expo-image-picker';
 import * as FileSystem from 'expo-file-system/legacy';
@@ -239,7 +241,7 @@ export default function CreateVideoScreen({ navigation, route }) {
         return (
           <TouchableOpacity key={option} onPress={() => onSelect(option)}
             style={[styles.chip, { backgroundColor: active ? colors.primary : colors.surface, borderColor: active ? colors.primary : colors.border }]}>
-            <Text style={{ color: active ? '#fff' : colors.textSecondary, fontSize: 12, fontWeight: '600' }}>{option}</Text>
+            <Text style={{ color: active ? colors.onPrimary : colors.textSecondary, fontSize: 12, fontWeight: '600' }}>{option}</Text>
           </TouchableOpacity>
         );
       })}
@@ -247,26 +249,26 @@ export default function CreateVideoScreen({ navigation, route }) {
   );
 
   if (loadingProject) {
-    return <View style={[styles.center, { backgroundColor: colors.background }]}><ActivityIndicator size="large" color={colors.primary} /></View>;
+    return <View style={[styles.center, { backgroundColor: colors.background }]}><ActivityIndicator size="large" color={colors.primaryText} /></View>;
   }
 
   return (
     <KeyboardAvoidingView style={[styles.container, { backgroundColor: colors.background }]} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
       <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} />
       <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
-        <Text style={[styles.eyebrow, { color: colors.primary }]}>{isEditing ? 'UPDATE YOUR PROJECT' : 'BUILD YOUR NEXT IDEA'}</Text>
+        <Text style={[styles.eyebrow, { color: colors.primaryText }]}>{isEditing ? 'UPDATE YOUR PROJECT' : 'BUILD YOUR NEXT IDEA'}</Text>
         <Text style={[styles.heading, { color: colors.text }]}>{isEditing ? 'Edit Project' : 'Create Project'}</Text>
         <Text style={[styles.subtitle, { color: colors.textSecondary }]}>Organize your video, tasks and release plan.</Text>
 
         <GlassCard style={styles.card}>
           <Text style={[styles.sectionTitle, { color: colors.text }]}>Select Channel</Text>
           {channels.length === 0 ? (
-            <TouchableOpacity onPress={() => navigation.navigate('ManageChannels')}><Text style={{ color: colors.primary }}>Create a channel first</Text></TouchableOpacity>
+            <TouchableOpacity onPress={() => navigation.navigate('ManageChannels')}><Text style={{ color: colors.primaryText }}>Create a channel first</Text></TouchableOpacity>
           ) : channels.filter((channel) => isEditing || workspaceChannelId === null || channel.id === workspaceChannelId).map((channel) => (
             <TouchableOpacity key={channel.id} onPress={() => setSelectedChannel(channel)} style={[styles.channel, { borderColor: selectedChannel?.id === channel.id ? colors.primary : colors.border, backgroundColor: selectedChannel?.id === channel.id ? colors.primaryLight : colors.surface }]}>
-              <Ionicons name="logo-youtube" color={colors.primary} size={18} />
+              <Ionicons name="logo-youtube" color={colors.primaryText} size={18} />
               <Text style={{ color: colors.text, flex: 1, marginLeft: 10 }}>{channel.name}</Text>
-              {selectedChannel?.id === channel.id && <Ionicons name="checkmark-circle" color={colors.primary} size={19} />}
+              {selectedChannel?.id === channel.id && <Ionicons name="checkmark-circle" color={colors.primaryText} size={19} />}
             </TouchableOpacity>
           ))}
         </GlassCard>
@@ -288,8 +290,8 @@ export default function CreateVideoScreen({ navigation, route }) {
                   activeOpacity={0.8}
                   style={[styles.thumbnailActionButton, { backgroundColor: colors.primaryLight, borderColor: colors.primary }]}
                 >
-                  <Ionicons name="image-outline" size={17} color={colors.primary} />
-                  <Text style={[styles.thumbnailActionText, { color: colors.primary }]}>Change Thumbnail</Text>
+                  <Ionicons name="image-outline" size={17} color={colors.primaryOnLight} />
+                  <Text style={[styles.thumbnailActionText, { color: colors.primaryOnLight }]}>Change Thumbnail</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
                   onPress={() => setThumbnailUri(null)}
@@ -308,7 +310,7 @@ export default function CreateVideoScreen({ navigation, route }) {
               style={[styles.thumbnailEmpty, { backgroundColor: colors.surfaceSecondary, borderColor: colors.border }]}
             >
               <View style={[styles.thumbnailEmptyIcon, { backgroundColor: colors.primaryLight }]}>
-                <Ionicons name="image-outline" size={25} color={colors.primary} />
+                <Ionicons name="image-outline" size={25} color={colors.primaryOnLight} />
               </View>
               <Text style={{ color: colors.text, fontWeight: '700', marginTop: 9 }}>Add Thumbnail</Text>
               <Text style={{ color: colors.textMuted, fontSize: 12, marginTop: 4 }}>Choose a 16:9 image from your gallery</Text>
@@ -317,7 +319,7 @@ export default function CreateVideoScreen({ navigation, route }) {
 
           <Text style={[styles.label, { color: colors.text }]}>Expected Release Date</Text>
           <TouchableOpacity onPress={() => setShowDatePicker(true)} style={[styles.pickerButton, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-            <Ionicons name="calendar-outline" size={19} color={colors.primary} />
+            <Ionicons name="calendar-outline" size={19} color={colors.primaryText} />
             <Text style={{ color: uploadDate ? colors.text : colors.textMuted, flex: 1 }}>{uploadDate ? formatStoredDate(formatDate(uploadDate), preferences.dateFormat) : 'Select date'}</Text>
             {uploadDate && <TouchableOpacity onPress={() => { setUploadDate(null); setShowTimePicker(false); }}><Ionicons name="close-circle" color={colors.danger} size={18} /></TouchableOpacity>}
           </TouchableOpacity>
@@ -325,7 +327,7 @@ export default function CreateVideoScreen({ navigation, route }) {
           {uploadDate && <>
             <Text style={[styles.label, { color: colors.text }]}>Expected Release Time</Text>
             <TouchableOpacity onPress={() => setShowTimePicker(true)} style={[styles.pickerButton, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-              <Ionicons name="time-outline" size={19} color={colors.primary} />
+              <Ionicons name="time-outline" size={19} color={colors.primaryText} />
               <Text style={{ color: colors.text, flex: 1 }}>{formatStoredTime(formatTime(uploadTime), preferences.timeFormat)}</Text>
             </TouchableOpacity>
             {showTimePicker && <DateTimePicker value={uploadTime} mode="time" display="default" is24Hour={preferences.timeFormat === '24h'} onChange={(event, time) => { setShowTimePicker(Platform.OS === 'ios'); if (event.type === 'set' && time) setUploadTime(time); }} />}
@@ -345,7 +347,7 @@ export default function CreateVideoScreen({ navigation, route }) {
           <Text style={[styles.label, { color: colors.text }]}>Add Custom Task</Text>
           <View style={styles.customRow}>
             <TextInput value={customTask} onChangeText={setCustomTask} placeholder="e.g. Add intro animation" placeholderTextColor={colors.textMuted} style={[styles.input, styles.customInput, { color: colors.text, backgroundColor: colors.surface, borderColor: colors.border }]} />
-            <TouchableOpacity onPress={addCustomTask} style={[styles.addButton, { backgroundColor: colors.primary }]}><Ionicons name="add" size={22} color="#fff" /></TouchableOpacity>
+          <TouchableOpacity onPress={addCustomTask} style={[styles.addButton, { backgroundColor: colors.primary, borderRadius: colors.buttonRadius }]}><Ionicons name="add" size={22} color={colors.onPrimary} /></TouchableOpacity>
           </View>
           {selectedTasks.filter((task) => !TASK_OPTIONS.includes(task)).map((task) => (
             <TouchableOpacity key={task} onPress={() => toggleTask(task)} style={styles.taskOption}>
@@ -353,7 +355,7 @@ export default function CreateVideoScreen({ navigation, route }) {
               <Text style={{ color: colors.text, marginLeft: 10 }}>{task}</Text>
             </TouchableOpacity>
           ))}
-          <Text style={{ color: colors.primary, fontWeight: '700', marginTop: 8 }}>{selectedTasks.length} tasks selected</Text>
+          <Text style={{ color: colors.primaryText, fontWeight: '700', marginTop: 8 }}>{selectedTasks.length} tasks selected</Text>
         </GlassCard>
 
         <GlassCard style={styles.card}>
@@ -364,9 +366,9 @@ export default function CreateVideoScreen({ navigation, route }) {
           {renderChips(PRIORITIES, priority, setPriority)}
         </GlassCard>
 
-        <TouchableOpacity disabled={saving || channels.length === 0} onPress={handleSave} style={[styles.saveButton, { backgroundColor: colors.primary, opacity: saving ? 0.6 : 1 }]}>
-          {saving ? <ActivityIndicator color="#fff" /> : <Ionicons name={isEditing ? 'save-outline' : 'add-circle-outline'} color="#fff" size={21} />}
-          <Text style={styles.saveText}>{saving ? 'Saving...' : isEditing ? 'Update Video Project' : 'Create Video Project'}</Text>
+        <TouchableOpacity disabled={saving || channels.length === 0} onPress={handleSave} style={[styles.saveButton, { backgroundColor: colors.primary, borderRadius: colors.buttonRadius, opacity: saving ? 0.6 : 1 }]}>
+          {saving ? <ActivityIndicator color={colors.onPrimary} /> : <Ionicons name={isEditing ? 'save-outline' : 'add-circle-outline'} color={colors.onPrimary} size={21} />}
+          <Text style={[styles.saveText, { color: colors.onPrimary }]}>{saving ? 'Saving...' : isEditing ? 'Update Video Project' : 'Create Video Project'}</Text>
         </TouchableOpacity>
         {isEditing && <TouchableOpacity onPress={() => navigation.goBack()} style={[styles.cancelButton, { borderColor: colors.border }]}><Text style={{ color: colors.textSecondary }}>Cancel Editing</Text></TouchableOpacity>}
         <Text style={[styles.footer, { color: colors.textMuted }]}>Saved locally on this device.</Text>
@@ -389,7 +391,7 @@ const styles = StyleSheet.create({
   description: { minHeight: 95, paddingTop: 12 },
   channel: { minHeight: 47, borderWidth: 1, borderRadius: 12, paddingHorizontal: 12, flexDirection: 'row', alignItems: 'center', marginBottom: 8 },
   thumbnailPreview: { borderWidth: 1, borderRadius: 15, padding: 8, overflow: 'hidden' },
-  thumbnailImage: { width: '100%', aspectRatio: 16 / 9, borderRadius: 10, resizeMode: 'cover', backgroundColor: '#222' },
+  thumbnailImage: { width: '100%', aspectRatio: 16 / 9, borderRadius: 10, resizeMode: 'cover' },
   thumbnailActions: { flexDirection: 'row', gap: 9, marginTop: 10 },
   thumbnailActionButton: { flex: 1, minHeight: 43, borderWidth: 1, borderRadius: 11, paddingHorizontal: 8, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6 },
   thumbnailActionText: { fontSize: 11, fontWeight: '700' },
@@ -404,7 +406,7 @@ const styles = StyleSheet.create({
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 8 },
   chip: { borderWidth: 1, borderRadius: 18, paddingHorizontal: 12, paddingVertical: 9 },
   saveButton: { minHeight: 54, borderRadius: 15, flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 10, marginTop: 4 },
-  saveText: { color: '#fff', fontSize: 15, fontWeight: '800' },
+  saveText: { fontSize: 15, fontWeight: '800' },
   cancelButton: { minHeight: 46, borderWidth: 1, borderRadius: 14, alignItems: 'center', justifyContent: 'center', marginTop: 10 },
   footer: { textAlign: 'center', fontSize: 11, marginTop: 15 },
 });

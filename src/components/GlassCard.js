@@ -14,19 +14,21 @@ export default function GlassCard({
   style,
   padding = 18,
 }) {
-  const { colors, isDark } = useTheme();
+  const { colors } = useTheme();
 
   return (
     <View
       style={[
         styles.card,
+        style,
         {
           backgroundColor: colors.glass,
           borderColor: colors.border,
           padding,
-          shadowColor: isDark ? '#000000' : '#7770B8',
+          shadowColor: colors.shadowColor,
+          borderRadius: colors.cardRadius,
+          elevation: colors.cardElevation,
         },
-        style,
       ]}
     >
       {children}

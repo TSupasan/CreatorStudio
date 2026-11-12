@@ -6,9 +6,9 @@ import {
   ScrollView,
   StatusBar,
   StyleSheet,
-  Text,
   View,
 } from 'react-native';
+import Text from '../components/ThemedText';
 import { Ionicons } from '@expo/vector-icons';
 import * as DocumentPicker from 'expo-document-picker';
 import * as FileSystem from 'expo-file-system/legacy';
@@ -36,13 +36,13 @@ function ActionButton({ colors, busy, icon, title, description, onPress, danger 
       }]}
     >
       <View style={[styles.actionIcon, { backgroundColor: danger ? `${colors.danger}18` : colors.primaryLight }]}>
-        <Ionicons name={icon} size={22} color={danger ? colors.danger : colors.primary} />
+        <Ionicons name={icon} size={22} color={danger ? colors.danger : colors.primaryOnLight} />
       </View>
       <View style={styles.actionText}>
         <Text style={[styles.actionTitle, { color: danger ? colors.danger : colors.text }]}>{title}</Text>
         <Text style={[styles.actionDescription, { color: colors.textSecondary }]}>{description}</Text>
       </View>
-      {busy ? <ActivityIndicator color={colors.primary} /> : <Ionicons name="chevron-forward" size={19} color={colors.textMuted} />}
+      {busy ? <ActivityIndicator color={colors.primaryText} /> : <Ionicons name="chevron-forward" size={19} color={colors.textMuted} />}
     </Pressable>
   );
 }
@@ -132,7 +132,7 @@ export default function BackupRestoreScreen({ navigation }) {
 
         <GlassCard style={styles.introCard} padding={18}>
           <View style={[styles.introIcon, { backgroundColor: colors.primaryLight }]}>
-            <Ionicons name="shield-checkmark-outline" size={25} color={colors.primary} />
+            <Ionicons name="shield-checkmark-outline" size={25} color={colors.primaryOnLight} />
           </View>
           <Text style={[styles.cardTitle, { color: colors.text }]}>Keep a local copy of your workspace</Text>
           <Text style={[styles.bodyText, { color: colors.textSecondary }]}>

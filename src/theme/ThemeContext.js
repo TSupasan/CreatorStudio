@@ -12,22 +12,29 @@ import {
 } from 'react-native';
 
 import {
-  lightColors,
-  darkColors,
+  getThemePalette,
 } from './colors';
+import { getTypographyStyle } from './typography';
 import { getSavedThemeMode, saveThemeMode as persistThemeMode } from '../database/repositories/settingsRepository';
+import { useAppPreferences } from '../context/AppPreferencesContext';
 
 const ThemeContext = createContext(null);
 
 export function ThemeProvider({ children }) {
   const systemTheme = useColorScheme();
+  const { preferences, updatePreferences } = useAppPreferences();
 
   const [themeMode, setThemeModeState] = useState('system');
   const [themeLoaded, setThemeLoaded] = useState(false);
 
-  const [colors, setColors] = useState(
-    systemTheme === 'dark' ? darkColors : lightColors
-  );
+  const activeMode = themeMode === 'system' ? systemTheme : themeMode;
+  const resolvedMode = activeMode === 'dark' ? 'dark' : 'light';
+  const colors = React.useMemo(() => getThemePalette(
+    preferences.visualTheme,
+    resolvedMode,
+    preferences.customAccent
+  ), [preferences.visualTheme, preferences.customAccent, resolvedMode]);
+  const typographyStyle = React.useMemo(() => getTypographyStyle(preferences.typographyStyle), [preferences.typographyStyle]);
 
   useEffect(() => {
     let isActive = true;
@@ -51,14 +58,7 @@ export function ThemeProvider({ children }) {
     setThemeModeState(mode);
   }, []);
 
-  useEffect(() => {
-    const activeTheme =
-      themeMode === 'system' ? systemTheme : themeMode;
-
-    setColors(
-      activeTheme === 'dark' ? darkColors : lightColors
-    );
-  }, [themeMode, systemTheme]);
+  const setVisualPreferences = useCallback(async (changes) => updatePreferences(changes), [updatePreferences]);
 
   return (
     <ThemeContext.Provider
@@ -67,7 +67,12 @@ export function ThemeProvider({ children }) {
         setThemeMode,
         themeLoaded,
         colors,
-        isDark: colors === darkColors,
+        isDark: resolvedMode === 'dark',
+        themeName: preferences.visualTheme,
+        customAccent: preferences.customAccent,
+        typographyStyle: preferences.typographyStyle,
+        typography: typographyStyle,
+        setVisualPreferences,
       }}
     >
       {children}

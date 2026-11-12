@@ -34,15 +34,15 @@ export default function App() {
   }
 
   return (
-    <ThemeProvider>
-      <WorkspaceProvider>
-        <AppPreferencesProvider>
+    <AppPreferencesProvider>
+      <ThemeProvider>
+        <WorkspaceProvider>
           <NavigationContainer>
             <AppNavigator />
           </NavigationContainer>
-        </AppPreferencesProvider>
-      </WorkspaceProvider>
-    </ThemeProvider>
+        </WorkspaceProvider>
+      </ThemeProvider>
+    </AppPreferencesProvider>
   );
 }
 

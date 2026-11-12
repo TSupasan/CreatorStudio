@@ -1,8 +1,10 @@
 import React, { useCallback, useMemo, useState } from 'react';
 import {
-  View, Text, StyleSheet, FlatList, TextInput, TouchableOpacity,
+  View, StyleSheet, FlatList, TouchableOpacity,
   StatusBar, Image,
 } from 'react-native';
+import Text from '../components/ThemedText';
+import TextInput from '../components/ThemedTextInput';
 import { useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../theme/ThemeContext';
@@ -135,7 +137,7 @@ export default function VideosScreen({ navigation }) {
 
           <View style={styles.progressHeader}>
             <Text style={[styles.smallLabel, { color: colors.textSecondary }]}>Task progress</Text>
-            <Text style={[styles.progressPercent, { color: colors.primary }]}>{progress.percentage}% ({progress.completed}/{progress.total})</Text>
+            <Text style={[styles.progressPercent, { color: colors.primaryText }]}>{progress.percentage}% ({progress.completed}/{progress.total})</Text>
           </View>
           <View style={[styles.track, { backgroundColor: colors.surfaceSecondary }]}>
             <View style={[styles.fill, { width: `${progress.percentage}%`, backgroundColor: colors.primary }]} />
@@ -146,7 +148,7 @@ export default function VideosScreen({ navigation }) {
               <Ionicons name="time-outline" size={15} color={countdown === 'Overdue' ? colors.danger : colors.textSecondary} />
               <Text style={[styles.countdownText, { color: countdown === 'Overdue' ? colors.danger : colors.textSecondary }]}>{countdown}</Text>
             </View>
-            <Ionicons name="chevron-forward" size={18} color={colors.primary} />
+            <Ionicons name="chevron-forward" size={18} color={colors.primaryText} />
           </View>
         </GlassCard>
       </TouchableOpacity>
@@ -164,7 +166,7 @@ export default function VideosScreen({ navigation }) {
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
         ListHeaderComponent={<>
-          <Text style={[styles.eyebrow, { color: colors.primary }]}>YOUR CREATIVE LIBRARY</Text>
+          <Text style={[styles.eyebrow, { color: colors.primaryText }]}>YOUR CREATIVE LIBRARY</Text>
           <Text style={[styles.heading, { color: colors.text }]}>My Videos</Text>
           <Text style={[styles.subtitle, { color: colors.textSecondary }]}>Manage your video projects.</Text>
           <View style={[styles.search, { backgroundColor: colors.surface, borderColor: colors.border }]}>
@@ -177,7 +179,7 @@ export default function VideosScreen({ navigation }) {
             renderItem={({ item }) => {
               const active = selectedFilter === item;
               return <TouchableOpacity onPress={() => setSelectedFilter(item)} style={[styles.filter, { backgroundColor: active ? colors.primary : colors.surface, borderColor: active ? colors.primary : colors.border }]}>
-                <Text style={{ color: active ? '#fff' : colors.textSecondary, fontSize: 12, fontWeight: '700' }}>{item}</Text>
+                <Text style={{ color: active ? colors.onPrimary : colors.textSecondary, fontSize: 12, fontWeight: '700' }}>{item}</Text>
               </TouchableOpacity>;
             }} />
           {/* ADVANCED FILTERS SECTION */}
@@ -206,7 +208,7 @@ export default function VideosScreen({ navigation }) {
                   ]}
                 >
                   <Text style={{
-                    color: active ? '#fff' : colors.textSecondary,
+                    color: active ? colors.onPrimary : colors.textSecondary,
                     fontSize: 12,
                     fontWeight: '700',
                   }}>
@@ -242,7 +244,7 @@ export default function VideosScreen({ navigation }) {
                   ]}
                 >
                   <Text style={{
-                    color: active ? '#fff' : colors.textSecondary,
+                    color: active ? colors.onPrimary : colors.textSecondary,
                     fontSize: 12,
                     fontWeight: '700',
                   }}>
@@ -267,8 +269,8 @@ export default function VideosScreen({ navigation }) {
               }}
               style={styles.clearFilters}
             >
-              <Ionicons name="refresh-outline" size={15} color={colors.primary} />
-              <Text style={[styles.clearFiltersText, { color: colors.primary }]}>
+              <Ionicons name="refresh-outline" size={15} color={colors.primaryText} />
+              <Text style={[styles.clearFiltersText, { color: colors.primaryText }]}>
                 Clear all filters
               </Text>
             </TouchableOpacity>
