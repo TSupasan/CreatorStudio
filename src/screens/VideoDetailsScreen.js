@@ -10,6 +10,8 @@ import GlassCard from '../components/GlassCard';
 import { getVideoById, deleteVideo } from '../database/repositories/videoRepository';
 import { getTasksByVideoId, updateTaskStatus, getVideoProgress } from '../database/repositories/taskRepository';
 import { cancelVideoReminder } from '../services/notificationService';
+import { useAppPreferences } from '../context/AppPreferencesContext';
+import { formatStoredDateTime } from '../utils/datePreferences';
 
 function countdown(video) {
   if (video.status === 'Published') return 'Already published';
@@ -27,6 +29,7 @@ function countdown(video) {
 
 export default function VideoDetailsScreen({ route, navigation }) {
   const { colors } = useTheme();
+  const { preferences } = useAppPreferences();
   const { videoId } = route.params;
   const [video, setVideo] = useState(null);
   const [tasks, setTasks] = useState([]);
@@ -124,7 +127,7 @@ export default function VideoDetailsScreen({ route, navigation }) {
             <Text style={[styles.countdown, { color: colors.text }]}>{countdown(video)}</Text>
           </View>
           <Text style={[styles.meta, { color: colors.textSecondary }]}>
-            {video.upload_date ? `Planned: ${video.upload_date} ${video.upload_time || ''}` : 'Set a release date by editing this project.'}
+            {video.upload_date ? `Planned: ${formatStoredDateTime(video.upload_date, video.upload_time, preferences)}` : 'Set a release date by editing this project.'}
           </Text>
         </GlassCard>
 

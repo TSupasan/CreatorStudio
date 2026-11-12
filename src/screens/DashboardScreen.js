@@ -17,6 +17,8 @@ import { useTheme } from '../theme/ThemeContext';
 import { useWorkspace } from '../context/WorkspaceContext';
 import { getAllVideos } from '../database/repositories/videoRepository';
 import { getVideoProgress } from '../database/repositories/taskRepository';
+import { useAppPreferences } from '../context/AppPreferencesContext';
+import { formatStoredDateTime } from '../utils/datePreferences';
 
 const getLocalDateString = () => {
   const now = new Date();
@@ -24,17 +26,6 @@ const getLocalDateString = () => {
   const month = String(now.getMonth() + 1).padStart(2, '0');
   const day = String(now.getDate()).padStart(2, '0');
   return `${year}-${month}-${day}`;
-};
-
-const formatUploadDate = (date, time) => {
-  if (!date) return 'Date not set';
-  const [year, month, day] = date.split('-').map(Number);
-  const formattedDate = new Date(year, month - 1, day).toLocaleDateString('en-GB', {
-    day: 'numeric',
-    month: 'short',
-    year: 'numeric',
-  });
-  return time ? `${formattedDate}  |  ${time}` : formattedDate;
 };
 
 const getStatusColor = (status) => {
@@ -49,6 +40,7 @@ const getStatusColor = (status) => {
 
 export default function DashboardScreen({ navigation }) {
   const { colors, isDark } = useTheme();
+  const { preferences } = useAppPreferences();
   const { channelId: selectedChannelId, refreshWorkspace } = useWorkspace();
   const fadeAnim = React.useRef(new Animated.Value(0)).current;
   const slideAnim = React.useRef(new Animated.Value(25)).current;
@@ -240,7 +232,7 @@ export default function DashboardScreen({ navigation }) {
           </Text>
           {showDate && (
             <Text style={[styles.videoMeta, { color: colors.textMuted }]}>
-              {formatUploadDate(video.upload_date, video.upload_time)}
+              {formatStoredDateTime(video.upload_date, video.upload_time, preferences) || 'Date not set'}
             </Text>
           )}
           <View style={styles.videoBottomRow}>

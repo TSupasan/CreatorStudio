@@ -2,10 +2,46 @@ import * as Notifications from 'expo-notifications';
 import { getDatabase } from '../database/database';
 import {
   getUploadRemindersEnabled as readUploadRemindersEnabled,
+  getDefaultReminderTiming,
+  getAppPreferences,
+  saveAppPreferences,
+  saveDefaultReminderTiming,
   saveUploadRemindersEnabled,
 } from '../database/repositories/settingsRepository';
 
 const CHANNEL_ID = 'upload-reminders';
+
+function reminderDescription(minutes) {
+  if (minutes === 15) return 'in 15 minutes';
+  if (minutes === 1440) return 'in 24 hours';
+  return 'in one hour';
+}
+
+export async function setDefaultReminderTiming(minutes) {
+  const previousPreferences = await getAppPreferences();
+  const remindersEnabled = await readUploadRemindersEnabled();
+  await saveDefaultReminderTiming(minutes);
+  if (!remindersEnabled) return { failed: 0, enabled: false };
+
+  let videos;
+  try {
+    const db = await getDatabase();
+    videos = await db.getAllAsync('SELECT * FROM videos');
+  } catch (error) {
+    await saveAppPreferences(previousPreferences);
+    throw error;
+  }
+  let failed = 0;
+  for (const video of videos) {
+    try {
+      await syncVideoReminder(video.id, video);
+    } catch (error) {
+      failed += 1;
+      console.warn('Could not update an upload reminder:', error);
+    }
+  }
+  return { failed, enabled: true };
+}
 
 export async function cancelVideoReminder(videoId) {
   const scheduled = await Notifications.getAllScheduledNotificationsAsync();
@@ -85,7 +121,8 @@ export async function syncVideoReminder(videoId, video) {
     return { scheduled: false, reason: 'invalid-date' };
   }
 
-  const reminderDate = new Date(uploadDate.getTime() - 60 * 60 * 1000);
+  const leadMinutes = await getDefaultReminderTiming();
+  const reminderDate = new Date(uploadDate.getTime() - leadMinutes * 60 * 1000);
 
   if (reminderDate.getTime() <= Date.now()) {
     return { scheduled: false, reason: 'too-soon-or-past' };
@@ -106,7 +143,7 @@ export async function syncVideoReminder(videoId, video) {
   const identifier = await Notifications.scheduleNotificationAsync({
     content: {
       title: 'Upcoming Video Upload',
-      body: `"${video.title}" is scheduled to be uploaded in one hour.`,
+      body: `"${video.title}" is scheduled to be uploaded ${reminderDescription(leadMinutes)}.`,
       sound: true,
       data: {
         videoId: String(videoId),

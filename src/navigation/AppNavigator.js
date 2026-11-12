@@ -11,6 +11,7 @@ import VideoDetailsScreen from '../screens/VideoDetailsScreen';
 import CalendarScreen from '../screens/CalendarScreen';
 import BackupRestoreScreen from '../screens/BackupRestoreScreen';
 import SettingsScreen from '../screens/SettingsScreen';
+import ProfileScreen from '../screens/ProfileScreen';
 import IdeaVaultScreen from '../screens/IdeaVaultScreen';
 import IdeaEditorScreen from '../screens/IdeaEditorScreen';
 
@@ -72,6 +73,11 @@ export default function AppNavigator() {
 
       <Stack.Screen
         name="Profile"
+        component={ProfileScreen}
+      />
+
+      <Stack.Screen
+        name="Settings"
         component={SettingsScreen}
       />
 

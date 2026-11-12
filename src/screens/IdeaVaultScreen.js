@@ -247,7 +247,7 @@ export default function IdeaVaultScreen({ navigation }) {
               ))}
             </View>
           ) : null}
-          <Text style={[styles.dateText, { color: colors.textMuted }]}>Updated {formatDate(item.updated_at)}</Text>
+          <Text style={[styles.dateText, { color: colors.textMuted }]}>Updated {formatStoredDate(item.updated_at, preferences.dateFormat)}</Text>
         </Pressable>
 
         <View style={[styles.ideaActions, { borderTopColor: colors.border }]}>

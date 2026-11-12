@@ -15,8 +15,8 @@ import { Ionicons } from '@expo/vector-icons';
 import { getAllVideos } from '../database/repositories/videoRepository';
 import { useTheme } from '../theme/ThemeContext';
 import { useWorkspace } from '../context/WorkspaceContext';
-
-const WEEK_DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+import { useAppPreferences } from '../context/AppPreferencesContext';
+import { formatStoredDate, formatStoredTime, getWeekdayLabels } from '../utils/datePreferences';
 
 const STATUS_COLORS = {
   Idea: '#8B8B9B',
@@ -39,20 +39,6 @@ function formatDate(date) {
   return `${year}-${month}-${day}`;
 }
 
-function formatTime(time) {
-  if (!time) return 'Time not set';
-
-  const parts = time.split(':');
-  if (parts.length < 2) return time;
-
-  const hours = Number(parts[0]);
-  const minutes = parts[1];
-  const suffix = hours >= 12 ? 'PM' : 'AM';
-  const displayHours = hours % 12 || 12;
-
-  return `${displayHours}:${minutes} ${suffix}`;
-}
-
 function getMonthLabel(date) {
   return date.toLocaleDateString('en-US', {
     month: 'long',
@@ -62,6 +48,7 @@ function getMonthLabel(date) {
 
 export default function CalendarScreen({ navigation }) {
   const { theme, isDark } = useTheme();
+  const { preferences } = useAppPreferences();
   const { channelId: workspaceChannelId, refreshWorkspace } = useWorkspace();
 
   const scrollRef = useRef(null);
@@ -145,7 +132,7 @@ export default function CalendarScreen({ navigation }) {
     const month = currentMonth.getMonth();
 
     const firstDay = new Date(year, month, 1);
-    const startDay = firstDay.getDay();
+    const startDay = (firstDay.getDay() - (preferences.weekStartsOn || 0) + 7) % 7;
 
     const daysInMonth = new Date(year, month + 1, 0).getDate();
 
@@ -162,7 +149,9 @@ export default function CalendarScreen({ navigation }) {
     }
 
     return cells;
-  }, [currentMonth]);
+  }, [currentMonth, preferences.weekStartsOn]);
+
+  const weekdayLabels = getWeekdayLabels(preferences.weekStartsOn);
 
   const selectedVideos = videosByDate[selectedDate] || [];
 
@@ -427,7 +416,7 @@ export default function CalendarScreen({ navigation }) {
           </View>
 
           <View style={styles.weekdayRow}>
-            {WEEK_DAYS.map(day => (
+            {weekdayLabels.map(day => (
               <Text key={day} style={styles.weekday}>
                 {day}
               </Text>
@@ -483,15 +472,7 @@ export default function CalendarScreen({ navigation }) {
         <View style={styles.agendaHeader}>
           <Text style={styles.agendaTitle}>Scheduled Videos</Text>
           <Text style={styles.agendaSubtitle}>
-            {new Date(`${selectedDate}T00:00:00`).toLocaleDateString(
-              'en-US',
-              {
-                weekday: 'long',
-                month: 'long',
-                day: 'numeric',
-                year: 'numeric',
-              }
-            )}
+            {formatStoredDate(selectedDate, preferences.dateFormat)}
           </Text>
         </View>
 
@@ -551,7 +532,7 @@ export default function CalendarScreen({ navigation }) {
                 <Text style={styles.time}>
                   <Ionicons name="time-outline" size={13} />
                   {'  '}
-                  {formatTime(video.upload_time)}
+                  {formatStoredTime(video.upload_time, preferences.timeFormat) || 'Time not set'}
                 </Text>
 
                 <Text style={styles.channel}>

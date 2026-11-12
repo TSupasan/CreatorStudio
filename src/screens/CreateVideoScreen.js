@@ -20,6 +20,8 @@ import {
   replaceVideoTasks,
 } from '../database/repositories/taskRepository';
 import { syncVideoReminder } from '../services/notificationService';
+import { useAppPreferences } from '../context/AppPreferencesContext';
+import { formatStoredDate, formatStoredTime } from '../utils/datePreferences';
 
 const STATUSES = ['Idea', 'Planning', 'Editing', 'Ready to Publish', 'Published'];
 const PRIORITIES = ['Low', 'Medium', 'High'];
@@ -31,6 +33,7 @@ const TASK_OPTIONS = [
 
 export default function CreateVideoScreen({ navigation, route }) {
   const { colors, isDark } = useTheme();
+  const { preferences } = useAppPreferences();
   const { channelId: workspaceChannelId, refreshWorkspace } = useWorkspace();
   const videoId = route?.params?.videoId;
   const sourceIdeaId = route?.params?.ideaId;
@@ -315,7 +318,7 @@ export default function CreateVideoScreen({ navigation, route }) {
           <Text style={[styles.label, { color: colors.text }]}>Expected Release Date</Text>
           <TouchableOpacity onPress={() => setShowDatePicker(true)} style={[styles.pickerButton, { backgroundColor: colors.surface, borderColor: colors.border }]}>
             <Ionicons name="calendar-outline" size={19} color={colors.primary} />
-            <Text style={{ color: uploadDate ? colors.text : colors.textMuted, flex: 1 }}>{uploadDate ? uploadDate.toLocaleDateString('en-GB') : 'Select date'}</Text>
+            <Text style={{ color: uploadDate ? colors.text : colors.textMuted, flex: 1 }}>{uploadDate ? formatStoredDate(formatDate(uploadDate), preferences.dateFormat) : 'Select date'}</Text>
             {uploadDate && <TouchableOpacity onPress={() => { setUploadDate(null); setShowTimePicker(false); }}><Ionicons name="close-circle" color={colors.danger} size={18} /></TouchableOpacity>}
           </TouchableOpacity>
           {showDatePicker && <DateTimePicker value={uploadDate || new Date()} mode="date" display="default" minimumDate={new Date(2000, 0, 1)} onChange={(event, date) => { setShowDatePicker(Platform.OS === 'ios'); if (event.type === 'set' && date) setUploadDate(date); }} />}
@@ -323,9 +326,9 @@ export default function CreateVideoScreen({ navigation, route }) {
             <Text style={[styles.label, { color: colors.text }]}>Expected Release Time</Text>
             <TouchableOpacity onPress={() => setShowTimePicker(true)} style={[styles.pickerButton, { backgroundColor: colors.surface, borderColor: colors.border }]}>
               <Ionicons name="time-outline" size={19} color={colors.primary} />
-              <Text style={{ color: colors.text, flex: 1 }}>{formatTime(uploadTime)}</Text>
+              <Text style={{ color: colors.text, flex: 1 }}>{formatStoredTime(formatTime(uploadTime), preferences.timeFormat)}</Text>
             </TouchableOpacity>
-            {showTimePicker && <DateTimePicker value={uploadTime} mode="time" display="default" onChange={(event, time) => { setShowTimePicker(Platform.OS === 'ios'); if (event.type === 'set' && time) setUploadTime(time); }} />}
+            {showTimePicker && <DateTimePicker value={uploadTime} mode="time" display="default" is24Hour={preferences.timeFormat === '24h'} onChange={(event, time) => { setShowTimePicker(Platform.OS === 'ios'); if (event.type === 'set' && time) setUploadTime(time); }} />}
           </>}
         </GlassCard>
 

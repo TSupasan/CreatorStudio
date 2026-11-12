@@ -6,6 +6,7 @@ import { ThemeProvider } from './src/theme/ThemeContext';
 import AppNavigator from './src/navigation/AppNavigator';
 import { initializeDatabase } from './src/database/initDatabase';
 import { WorkspaceProvider } from './src/context/WorkspaceContext';
+import { AppPreferencesProvider } from './src/context/AppPreferencesContext';
 
 export default function App() {
   const [isReady, setIsReady] = useState(false);
@@ -35,9 +36,11 @@ export default function App() {
   return (
     <ThemeProvider>
       <WorkspaceProvider>
-        <NavigationContainer>
-          <AppNavigator />
-        </NavigationContainer>
+        <AppPreferencesProvider>
+          <NavigationContainer>
+            <AppNavigator />
+          </NavigationContainer>
+        </AppPreferencesProvider>
       </WorkspaceProvider>
     </ThemeProvider>
   );
