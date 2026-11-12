@@ -26,6 +26,7 @@ import {
   parseIdeaTags,
   updateIdeaStatus,
 } from '../database/repositories/ideaRepository';
+import { getAllChannels } from '../database/repositories/channelRepository';
 import { useTheme } from '../theme/ThemeContext';
 
 const STATUS_FILTERS = ['All', 'New', 'Selected', 'Planned', 'Converted'];
@@ -42,9 +43,11 @@ export default function IdeaVaultScreen({ navigation }) {
   const [ideas, setIdeas] = useState([]);
   const [categories, setCategories] = useState([]);
   const [series, setSeries] = useState([]);
+  const [channels, setChannels] = useState([]);
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('All');
   const [seriesFilter, setSeriesFilter] = useState(null);
+  const [channelFilter, setChannelFilter] = useState('all');
   const [loading, setLoading] = useState(true);
   const [categoryModalVisible, setCategoryModalVisible] = useState(false);
   const [seriesModalVisible, setSeriesModalVisible] = useState(false);
@@ -54,12 +57,13 @@ export default function IdeaVaultScreen({ navigation }) {
 
   const loadVault = useCallback(async () => {
     try {
-      const [ideaRows, categoryRows, seriesRows] = await Promise.all([
-        getAllIdeas(), getIdeaCategories(), getContentSeries(),
+      const [ideaRows, categoryRows, seriesRows, channelRows] = await Promise.all([
+        getAllIdeas(), getIdeaCategories(), getContentSeries(), getAllChannels(),
       ]);
       setIdeas(ideaRows);
       setCategories(categoryRows);
       setSeries(seriesRows);
+      setChannels(channelRows);
     } catch (error) {
       console.error('Idea Vault loading error:', error);
       Alert.alert('Idea Vault unavailable', 'Could not load your saved ideas.');
@@ -79,9 +83,12 @@ export default function IdeaVaultScreen({ navigation }) {
         parseIdeaTags(idea.tags).some((tag) => tag.toLocaleLowerCase().includes(query));
       const matchesStatus = statusFilter === 'All' || idea.status === statusFilter;
       const matchesSeries = seriesFilter === null || idea.series_id === Number(seriesFilter);
-      return matchesSearch && matchesStatus && matchesSeries;
+      const matchesChannel = channelFilter === 'all' || (channelFilter === 'unassigned'
+        ? idea.channel_id === null
+        : idea.channel_id === Number(channelFilter));
+      return matchesSearch && matchesStatus && matchesSeries && matchesChannel;
     });
-  }, [ideas, search, statusFilter, seriesFilter]);
+  }, [ideas, search, statusFilter, seriesFilter, channelFilter]);
 
   const confirmDeleteIdea = (idea) => {
     Alert.alert(
@@ -223,6 +230,9 @@ export default function IdeaVaultScreen({ navigation }) {
               <Text style={[styles.ideaMeta, { color: colors.textSecondary }]}>
                 {item.category_name || 'Uncategorized'}{item.series_name ? `  ·  ${item.series_name}` : ''}
               </Text>
+              <Text style={[styles.ideaChannel, { color: colors.textMuted }]}>
+                {item.channel_name ? `Channel · ${item.channel_name}` : 'No channel assigned'}
+              </Text>
             </View>
             <Ionicons name="create-outline" size={18} color={colors.textMuted} />
           </View>
@@ -312,6 +322,27 @@ export default function IdeaVaultScreen({ navigation }) {
         })}
       </ScrollView>
 
+      <Text style={[styles.filterLabel, { color: colors.textSecondary, marginTop: 16 }]}>CHANNEL</Text>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chipList}>
+        {[
+          { id: 'all', name: 'All channels' },
+          ...channels,
+          { id: 'unassigned', name: 'No channel' },
+        ].map((item) => {
+          const selected = channelFilter === item.id;
+          return (
+            <Pressable key={`channel-${item.id}`} onPress={() => setChannelFilter(item.id)} style={[styles.filterChip, { borderColor: selected ? colors.primary : colors.border, backgroundColor: selected ? colors.primaryLight : colors.surface }]}>
+              <Text style={[styles.filterChipText, { color: selected ? colors.primary : colors.textSecondary }]}>{item.name}</Text>
+            </Pressable>
+          );
+        })}
+      </ScrollView>
+      {channels.length === 0 ? (
+        <Pressable onPress={() => navigation.navigate('MainTabs', { screen: 'Channels' })} style={styles.channelManagementLink}>
+          <Text style={[styles.channelManagementText, { color: colors.primary }]}>No channels available · Open channel management</Text>
+        </Pressable>
+      ) : null}
+
       <Text style={[styles.filterLabel, { color: colors.textSecondary, marginTop: 16 }]}>STATUS</Text>
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chipList}>
         {STATUS_FILTERS.map((status) => {
@@ -324,7 +355,7 @@ export default function IdeaVaultScreen({ navigation }) {
         })}
       </ScrollView>
       <View style={styles.resultsHeader}>
-        <Text style={[styles.resultsTitle, { color: colors.text }]}>{seriesFilter ? series.find((item) => item.id === Number(seriesFilter))?.name || 'Series' : 'Your ideas'}</Text>
+        <Text style={[styles.resultsTitle, { color: colors.text }]}>{channelFilter !== 'all' ? (channelFilter === 'unassigned' ? 'No channel' : channels.find((item) => item.id === Number(channelFilter))?.name || 'Channel ideas') : seriesFilter ? series.find((item) => item.id === Number(seriesFilter))?.name || 'Series' : 'Your ideas'}</Text>
         <Text style={[styles.resultsCount, { color: colors.textMuted }]}>{filteredIdeas.length} {filteredIdeas.length === 1 ? 'idea' : 'ideas'}</Text>
       </View>
     </View>
@@ -435,6 +466,9 @@ const styles = StyleSheet.create({
   ideaTitleGroup: { flex: 1, marginRight: 8 },
   ideaTitle: { fontSize: 15, lineHeight: 20, fontWeight: '800' },
   ideaMeta: { fontSize: 10, marginTop: 5 },
+  ideaChannel: { fontSize: 9, marginTop: 4 },
+  channelManagementLink: { alignSelf: 'flex-start', paddingVertical: 9 },
+  channelManagementText: { fontSize: 10, fontWeight: '700' },
   ideaDescription: { fontSize: 11, lineHeight: 17, marginTop: 10 },
   tagRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: 10 },
   tag: { fontSize: 9, fontWeight: '700', paddingHorizontal: 8, paddingVertical: 5, borderRadius: 7, overflow: 'hidden' },

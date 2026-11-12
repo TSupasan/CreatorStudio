@@ -13,6 +13,7 @@ import {
   TextInput,
   View,
 } from 'react-native';
+import { useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import GlassCard from '../components/GlassCard';
 import {
@@ -23,6 +24,7 @@ import {
   parseIdeaTags,
   updateIdea,
 } from '../database/repositories/ideaRepository';
+import { getAllChannels } from '../database/repositories/channelRepository';
 import { useTheme } from '../theme/ThemeContext';
 
 const EDITABLE_STATUSES = ['New', 'Selected', 'Planned'];
@@ -34,7 +36,7 @@ function formatDate(value) {
   return date.toLocaleString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
 }
 
-function SelectionModal({ visible, title, items, selectedId, onSelect, onClose, colors, emptyLabel }) {
+function SelectionModal({ visible, title, items, selectedId, onSelect, onClose, colors, emptyLabel, emptyMessage, emptyAction }) {
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
       <View style={styles.modalOverlay}>
@@ -54,7 +56,12 @@ function SelectionModal({ visible, title, items, selectedId, onSelect, onClose, 
                 {selectedId === item.id ? <Ionicons name="checkmark-circle" size={19} color={colors.primary} /> : null}
               </Pressable>
             ))}
-            {items.length === 0 ? <Text style={[styles.emptySelection, { color: colors.textMuted }]}>Create one from the Idea Vault.</Text> : null}
+            {items.length === 0 ? (
+              <View style={styles.emptySelectionWrap}>
+                <Text style={[styles.emptySelection, { color: colors.textMuted }]}>{emptyMessage || 'Create one from the Idea Vault.'}</Text>
+                {emptyAction ? <Pressable onPress={emptyAction.onPress} style={styles.emptyAction}><Text style={[styles.emptyActionText, { color: colors.primary }]}>{emptyAction.label}</Text></Pressable> : null}
+              </View>
+            ) : null}
           </ScrollView>
         </View>
       </View>
@@ -68,6 +75,7 @@ export default function IdeaEditorScreen({ navigation, route }) {
   const isEditing = Boolean(ideaId);
   const [categories, setCategories] = useState([]);
   const [series, setSeries] = useState([]);
+  const [channels, setChannels] = useState([]);
   const [form, setForm] = useState({
     title: '',
     description: '',
@@ -75,6 +83,7 @@ export default function IdeaEditorScreen({ navigation, route }) {
     tagsText: '',
     category_id: null,
     series_id: null,
+    channel_id: null,
     status: 'New',
     converted_video_id: null,
     created_at: null,
@@ -84,19 +93,22 @@ export default function IdeaEditorScreen({ navigation, route }) {
   const [saving, setSaving] = useState(false);
   const [categorySelectorVisible, setCategorySelectorVisible] = useState(false);
   const [seriesSelectorVisible, setSeriesSelectorVisible] = useState(false);
+  const [channelSelectorVisible, setChannelSelectorVisible] = useState(false);
 
   useEffect(() => {
     let active = true;
     const loadEditor = async () => {
       try {
-        const [categoryRows, seriesRows, idea] = await Promise.all([
+        const [categoryRows, seriesRows, channelRows, idea] = await Promise.all([
           getIdeaCategories(),
           getContentSeries(),
+          getAllChannels(),
           isEditing ? getIdeaById(ideaId) : Promise.resolve(null),
         ]);
         if (!active) return;
         setCategories(categoryRows);
         setSeries(seriesRows);
+        setChannels(channelRows);
         if (isEditing) {
           if (!idea) {
             Alert.alert('Idea not found', 'This idea may have been deleted.');
@@ -119,6 +131,22 @@ export default function IdeaEditorScreen({ navigation, route }) {
     return () => { active = false; };
   }, [ideaId, isEditing, navigation]);
 
+  useFocusEffect(
+    React.useCallback(() => {
+      let active = true;
+      getAllChannels().then((rows) => {
+        if (!active) return;
+        setChannels(rows);
+        setForm((current) => rows.some((channel) => channel.id === current.channel_id) || current.channel_id === null
+          ? current
+          : { ...current, channel_id: null });
+      }).catch((error) => {
+        console.error('Idea editor channel loading error:', error);
+      });
+      return () => { active = false; };
+    }, [])
+  );
+
   const selectedCategory = useMemo(
     () => categories.find((item) => item.id === form.category_id),
     [categories, form.category_id]
@@ -126,6 +154,10 @@ export default function IdeaEditorScreen({ navigation, route }) {
   const selectedSeries = useMemo(
     () => series.find((item) => item.id === form.series_id),
     [series, form.series_id]
+  );
+  const selectedChannel = useMemo(
+    () => channels.find((item) => item.id === form.channel_id),
+    [channels, form.channel_id]
   );
   const linkedToVideo = Boolean(form.converted_video_id);
   const isLockedConverted = form.status === 'Converted' && linkedToVideo;
@@ -147,6 +179,7 @@ export default function IdeaEditorScreen({ navigation, route }) {
         tags: form.tagsText.split(',').map((tag) => tag.trim()).filter(Boolean),
         category_id: form.category_id,
         series_id: form.series_id,
+        channel_id: form.channel_id,
         status: form.status,
       };
       if (isEditing) await updateIdea(ideaId, data);
@@ -257,6 +290,13 @@ export default function IdeaEditorScreen({ navigation, route }) {
             <Ionicons name="chevron-down" size={17} color={colors.textMuted} />
           </Pressable>
 
+          <Text style={[styles.label, { color: colors.text, marginTop: 16 }]}>CHANNEL (OPTIONAL)</Text>
+          <Pressable accessibilityRole="button" onPress={() => setChannelSelectorVisible(true)} style={[styles.selectButton, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+            <Ionicons name="logo-youtube" size={18} color={colors.primary} />
+            <Text style={[styles.selectText, { color: selectedChannel ? colors.text : colors.textMuted }]}>{selectedChannel?.name || 'No channel selected'}</Text>
+            <Ionicons name="chevron-down" size={17} color={colors.textMuted} />
+          </Pressable>
+
           <Text style={[styles.label, { color: colors.text, marginTop: 16 }]}>STATUS</Text>
           <View style={styles.statusOptions}>
             {(isLockedConverted ? ['Converted'] : EDITABLE_STATUSES).map((status) => {
@@ -311,6 +351,24 @@ export default function IdeaEditorScreen({ navigation, route }) {
         onClose={() => setSeriesSelectorVisible(false)}
         onSelect={(id) => { updateField('series_id', id); setSeriesSelectorVisible(false); }}
       />
+      <SelectionModal
+        visible={channelSelectorVisible}
+        title="Choose a channel"
+        items={channels}
+        selectedId={form.channel_id}
+        emptyLabel="No channel"
+        emptyMessage="No channels available"
+        emptyAction={{
+          label: 'Open channel management',
+          onPress: () => {
+            setChannelSelectorVisible(false);
+            navigation.navigate('MainTabs', { screen: 'Channels' });
+          },
+        }}
+        colors={colors}
+        onClose={() => setChannelSelectorVisible(false)}
+        onSelect={(id) => { updateField('channel_id', id); setChannelSelectorVisible(false); }}
+      />
     </KeyboardAvoidingView>
   );
 }
@@ -353,4 +411,7 @@ const styles = StyleSheet.create({
   selectionRow: { minHeight: 48, borderBottomWidth: StyleSheet.hairlineWidth, flexDirection: 'row', alignItems: 'center', paddingVertical: 10 },
   selectionText: { flex: 1, fontSize: 12, fontWeight: '600' },
   emptySelection: { textAlign: 'center', fontSize: 11, paddingVertical: 20 },
+  emptySelectionWrap: { alignItems: 'center', paddingBottom: 10 },
+  emptyAction: { paddingHorizontal: 12, paddingVertical: 9 },
+  emptyActionText: { fontSize: 11, fontWeight: '800' },
 });

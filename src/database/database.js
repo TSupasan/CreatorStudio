@@ -64,12 +64,14 @@ export async function getDatabase() {
         tags TEXT NOT NULL DEFAULT '[]',
         category_id INTEGER,
         series_id INTEGER,
+        channel_id INTEGER,
         status TEXT NOT NULL DEFAULT 'New' CHECK (status IN ('New', 'Selected', 'Planned', 'Converted')),
         converted_video_id INTEGER UNIQUE,
         created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
         updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (category_id) REFERENCES idea_categories(id) ON DELETE SET NULL,
         FOREIGN KEY (series_id) REFERENCES content_series(id) ON DELETE SET NULL,
+        FOREIGN KEY (channel_id) REFERENCES channels(id) ON DELETE SET NULL,
         FOREIGN KEY (converted_video_id) REFERENCES videos(id) ON DELETE SET NULL
       );
 
@@ -100,6 +102,16 @@ export async function getDatabase() {
     if (!hasUploadTime) {
       await db.execAsync('ALTER TABLE videos ADD COLUMN upload_time TEXT');
     }
+
+    const ideaColumns = await db.getAllAsync('PRAGMA table_info(content_ideas)');
+    const hasIdeaChannel = ideaColumns.some((column) => column.name === 'channel_id');
+    if (!hasIdeaChannel) {
+      await db.execAsync(
+        'ALTER TABLE content_ideas ADD COLUMN channel_id INTEGER REFERENCES channels(id) ON DELETE SET NULL'
+      );
+    }
+
+    await db.execAsync('CREATE INDEX IF NOT EXISTS content_ideas_channel_idx ON content_ideas(channel_id)');
   }
 
   return db;

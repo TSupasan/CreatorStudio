@@ -87,10 +87,11 @@ export async function getAllIdeas() {
   const db = await getDatabase();
   return db.getAllAsync(`
     SELECT content_ideas.*, idea_categories.name AS category_name,
-           content_series.name AS series_name
+           content_series.name AS series_name, channels.name AS channel_name
     FROM content_ideas
     LEFT JOIN idea_categories ON idea_categories.id = content_ideas.category_id
     LEFT JOIN content_series ON content_series.id = content_ideas.series_id
+    LEFT JOIN channels ON channels.id = content_ideas.channel_id
     ORDER BY content_ideas.updated_at DESC, content_ideas.id DESC
   `);
 }
@@ -99,10 +100,11 @@ export async function getIdeaById(ideaId) {
   const db = await getDatabase();
   return db.getFirstAsync(`
     SELECT content_ideas.*, idea_categories.name AS category_name,
-           content_series.name AS series_name
+           content_series.name AS series_name, channels.name AS channel_name
     FROM content_ideas
     LEFT JOIN idea_categories ON idea_categories.id = content_ideas.category_id
     LEFT JOIN content_series ON content_series.id = content_ideas.series_id
+    LEFT JOIN channels ON channels.id = content_ideas.channel_id
     WHERE content_ideas.id = ?
   `, [Number(ideaId)]);
 }
@@ -115,11 +117,11 @@ export async function createIdea(ideaInput) {
   const now = new Date().toISOString();
   const result = await db.runAsync(
     `INSERT INTO content_ideas
-      (title, description, notes, tags, category_id, series_id, status, created_at, updated_at)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      (title, description, notes, tags, category_id, series_id, channel_id, status, created_at, updated_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     [idea.title, String(idea.description || '').trim(), String(idea.notes || '').trim(),
       JSON.stringify(idea.tags), idea.category_id || null, idea.series_id || null,
-      idea.status, now, now]
+      idea.channel_id || null, idea.status, now, now]
   );
   return result.lastInsertRowId;
 }
@@ -142,11 +144,11 @@ export async function updateIdea(ideaId, ideaInput) {
   await db.runAsync(
     `UPDATE content_ideas
      SET title = ?, description = ?, notes = ?, tags = ?, category_id = ?, series_id = ?,
-         status = ?, updated_at = ?
+         channel_id = ?, status = ?, updated_at = ?
      WHERE id = ?`,
     [idea.title, String(idea.description || '').trim(), String(idea.notes || '').trim(),
       JSON.stringify(idea.tags), idea.category_id || null, idea.series_id || null,
-      idea.status, new Date().toISOString(), Number(ideaId)]
+      idea.channel_id || null, idea.status, new Date().toISOString(), Number(ideaId)]
   );
 }
 
