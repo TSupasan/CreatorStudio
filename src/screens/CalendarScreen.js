@@ -14,6 +14,7 @@ import { Ionicons } from '@expo/vector-icons';
 
 import { getAllVideos } from '../database/repositories/videoRepository';
 import { useTheme } from '../theme/ThemeContext';
+import { useWorkspace } from '../context/WorkspaceContext';
 
 const WEEK_DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
@@ -61,6 +62,7 @@ function getMonthLabel(date) {
 
 export default function CalendarScreen({ navigation }) {
   const { theme, isDark } = useTheme();
+  const { channelId: workspaceChannelId, refreshWorkspace } = useWorkspace();
 
   const scrollRef = useRef(null);
 
@@ -89,7 +91,8 @@ export default function CalendarScreen({ navigation }) {
 
       setError('');
 
-      const result = await getAllVideos();
+      await refreshWorkspace();
+      const result = await getAllVideos(workspaceChannelId);
       setVideos(Array.isArray(result) ? result : []);
     } catch (err) {
       console.error('Calendar loading error:', err);
@@ -98,7 +101,7 @@ export default function CalendarScreen({ navigation }) {
       setLoading(false);
       setRefreshing(false);
     }
-  }, []);
+  }, [workspaceChannelId, refreshWorkspace]);
 
   useFocusEffect(
     useCallback(() => {

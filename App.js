@@ -5,6 +5,7 @@ import { NavigationContainer } from '@react-navigation/native';
 import { ThemeProvider } from './src/theme/ThemeContext';
 import AppNavigator from './src/navigation/AppNavigator';
 import { initializeDatabase } from './src/database/initDatabase';
+import { WorkspaceProvider } from './src/context/WorkspaceContext';
 
 export default function App() {
   const [isReady, setIsReady] = useState(false);
@@ -33,9 +34,11 @@ export default function App() {
 
   return (
     <ThemeProvider>
-      <NavigationContainer>
-        <AppNavigator />
-      </NavigationContainer>
+      <WorkspaceProvider>
+        <NavigationContainer>
+          <AppNavigator />
+        </NavigationContainer>
+      </WorkspaceProvider>
     </ThemeProvider>
   );
 }

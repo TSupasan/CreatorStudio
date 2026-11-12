@@ -3,6 +3,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 
 import DashboardScreen from '../screens/DashboardScreen';
+import WorkspaceHomeScreen from '../screens/WorkspaceHomeScreen';
 import ChannelsScreen from '../screens/ChannelsScreen';
 import VideosScreen from '../screens/VideosScreen';
 import CreateVideoScreen from '../screens/CreateVideoScreen';
@@ -17,6 +18,16 @@ import CustomTabBar from './CustomTabBar';
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
+const HomeStack = createNativeStackNavigator();
+
+function HomeFlow() {
+  return (
+    <HomeStack.Navigator screenOptions={{ headerShown: false }}>
+      <HomeStack.Screen name="WorkspaceHome" component={WorkspaceHomeScreen} />
+      <HomeStack.Screen name="Dashboard" component={DashboardScreen} />
+    </HomeStack.Navigator>
+  );
+}
 
 function MainTabs() {
   return (
@@ -27,11 +38,11 @@ function MainTabs() {
         headerShown: false,
       }}
     >
-      <Tab.Screen name="Home" component={DashboardScreen} />
-      <Tab.Screen name="Videos" component={VideosScreen} />
+      <Tab.Screen name="Home" component={HomeFlow} />
+      <Tab.Screen name="Video" component={VideosScreen} />
       <Tab.Screen name="Create" component={CreateVideoScreen} />
       <Tab.Screen name="Calendar" component={CalendarScreen} />
-      <Tab.Screen name="Channels" component={ChannelsScreen} />
+      <Tab.Screen name="Idea" component={IdeaVaultScreen} />
     </Tab.Navigator>
   );
 }
@@ -60,13 +71,13 @@ export default function AppNavigator() {
       />
 
       <Stack.Screen
-        name="Settings"
+        name="Profile"
         component={SettingsScreen}
       />
 
       <Stack.Screen
-        name="IdeaVault"
-        component={IdeaVaultScreen}
+        name="ManageChannels"
+        component={ChannelsScreen}
       />
 
       <Stack.Screen

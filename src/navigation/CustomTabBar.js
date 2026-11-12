@@ -22,8 +22,8 @@ const tabs = [
     activeIcon: 'home',
   },
   {
-    name: 'Videos',
-    label: 'Videos',
+    name: 'Video',
+    label: 'Video',
     icon: 'videocam-outline',
     activeIcon: 'videocam',
   },
@@ -40,10 +40,10 @@ const tabs = [
     activeIcon: 'calendar',
   },
   {
-    name: 'Channels',
-    label: 'Channels',
-    icon: 'people-outline',
-    activeIcon: 'people',
+    name: 'Idea',
+    label: 'Idea',
+    icon: 'bulb-outline',
+    activeIcon: 'bulb',
   },
 ];
 

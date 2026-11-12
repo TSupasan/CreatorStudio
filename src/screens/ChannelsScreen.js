@@ -8,7 +8,10 @@ import {
   TouchableOpacity,
   TextInput,
   Alert,
+  Image,
 } from 'react-native';
+import * as ImagePicker from 'expo-image-picker';
+import * as FileSystem from 'expo-file-system/legacy';
 import { useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 
@@ -21,14 +24,17 @@ import {
   updateChannel,
   deleteChannel,
 } from '../database/repositories/channelRepository';
+import { useWorkspace } from '../context/WorkspaceContext';
 
-export default function ChannelsScreen() {
+export default function ChannelsScreen({ navigation }) {
   const { colors } = useTheme();
+  const { refreshWorkspace } = useWorkspace();
 
   const [channels, setChannels] = useState([]);
   const [channelName, setChannelName] = useState('');
   const [description, setDescription] = useState('');
   const [editingChannelId, setEditingChannelId] = useState(null);
+  const [profileImageUri, setProfileImageUri] = useState(null);
 
   const loadChannels = async () => {
     try {
@@ -42,13 +48,15 @@ export default function ChannelsScreen() {
   useFocusEffect(
     useCallback(() => {
       loadChannels();
-    }, [])
+      refreshWorkspace().catch((error) => console.error('Workspace refresh error:', error));
+    }, [refreshWorkspace])
   );
 
   const resetForm = () => {
     setChannelName('');
     setDescription('');
     setEditingChannelId(null);
+    setProfileImageUri(null);
   };
 
   const handleAddChannel = async () => {
@@ -63,18 +71,19 @@ export default function ChannelsScreen() {
           editingChannelId,
           channelName.trim(),
           description.trim(),
-          null
+          profileImageUri
         );
 
         Alert.alert('Success', 'Channel updated successfully!');
       } else {
-        await addChannel(channelName.trim(), description.trim());
+        await addChannel(channelName.trim(), description.trim(), profileImageUri);
 
         Alert.alert('Success', 'Channel added successfully!');
       }
 
       resetForm();
       await loadChannels();
+      await refreshWorkspace();
     } catch (error) {
       Alert.alert('Error', 'Could not save channel.');
       console.error(error);
@@ -85,6 +94,32 @@ export default function ChannelsScreen() {
     setChannelName(item.name);
     setDescription(item.description || '');
     setEditingChannelId(item.id);
+    setProfileImageUri(item.profile_image_uri || null);
+  };
+
+  const chooseChannelLogo = async () => {
+    try {
+      const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (!permission.granted) {
+        Alert.alert('Permission required', 'Allow photo access to choose a channel logo.');
+        return;
+      }
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ['images'],
+        allowsEditing: true,
+        aspect: [1, 1],
+        quality: 0.85,
+      });
+      if (result.canceled || !result.assets?.[0]?.uri) return;
+      const pickedUri = result.assets[0].uri;
+      const extension = pickedUri.split('.').pop()?.split('?')[0] || 'jpg';
+      const destination = `${FileSystem.documentDirectory}channel_logo_${Date.now()}.${extension}`;
+      await FileSystem.copyAsync({ from: pickedUri, to: destination });
+      setProfileImageUri(destination);
+    } catch (error) {
+      console.error('Channel logo selection error:', error);
+      Alert.alert('Image unavailable', 'Could not save the selected channel logo.');
+    }
   };
 
   const handleDeleteChannel = (id) => {
@@ -99,6 +134,7 @@ export default function ChannelsScreen() {
           onPress: async () => {
             try {
               await deleteChannel(id);
+              await refreshWorkspace();
 
               if (editingChannelId === id) {
                 resetForm();
@@ -118,17 +154,10 @@ export default function ChannelsScreen() {
   const renderChannel = ({ item }) => (
     <GlassCard style={styles.channelCard}>
       <View style={styles.channelRow}>
-        <View
-          style={[
-            styles.channelIcon,
-            { backgroundColor: colors.primaryLight },
-          ]}
-        >
-          <Ionicons
-            name="logo-youtube"
-            size={25}
-            color={colors.primary}
-          />
+        <View style={[styles.channelIcon, { backgroundColor: colors.primaryLight }]}>
+          {item.profile_image_uri
+            ? <Image source={{ uri: item.profile_image_uri }} style={styles.channelLogo} />
+            : <Ionicons name="logo-youtube" size={25} color={colors.primary} />}
         </View>
 
         <View style={styles.channelInfo}>
@@ -172,6 +201,9 @@ export default function ChannelsScreen() {
         contentContainerStyle={styles.listContent}
         ListHeaderComponent={
           <>
+            <TouchableOpacity accessibilityRole="button" accessibilityLabel="Go back to Profile" onPress={() => navigation.goBack()} style={[styles.backButton, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+              <Ionicons name="arrow-back" size={20} color={colors.text} />
+            </TouchableOpacity>
             <Text style={[styles.eyebrow, { color: colors.primary }]}>
               YOUR CONTENT NETWORK
             </Text>
@@ -222,6 +254,20 @@ export default function ChannelsScreen() {
                 ]}
                 multiline
               />
+
+              <View style={styles.logoRow}>
+                <View style={[styles.logoPreview, { backgroundColor: colors.primaryLight }]}>
+                  {profileImageUri
+                    ? <Image source={{ uri: profileImageUri }} style={styles.channelLogo} />
+                    : <Ionicons name="logo-youtube" size={22} color={colors.primary} />}
+                </View>
+                <View style={styles.logoActions}>
+                  <TouchableOpacity onPress={chooseChannelLogo} style={[styles.logoButton, { borderColor: colors.border }]}>
+                    <Text style={[styles.logoButtonText, { color: colors.primary }]}>{profileImageUri ? 'Change logo' : 'Add channel logo'}</Text>
+                  </TouchableOpacity>
+                  {profileImageUri ? <TouchableOpacity onPress={() => setProfileImageUri(null)} style={styles.removeLogoButton}><Text style={[styles.logoButtonText, { color: colors.danger }]}>Remove</Text></TouchableOpacity> : null}
+                </View>
+              </View>
 
               <TouchableOpacity
                 onPress={handleAddChannel}
@@ -292,6 +338,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
+  backButton: { width: 42, height: 42, borderWidth: 1, borderRadius: 14, alignItems: 'center', justifyContent: 'center', marginBottom: 17 },
   listContent: {
     paddingHorizontal: 20,
     paddingTop: 65,
@@ -383,7 +430,15 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     alignItems: 'center',
     justifyContent: 'center',
+    overflow: 'hidden',
   },
+  channelLogo: { width: '100%', height: '100%' },
+  logoRow: { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 13 },
+  logoPreview: { width: 54, height: 54, borderRadius: 17, overflow: 'hidden', alignItems: 'center', justifyContent: 'center' },
+  logoActions: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  logoButton: { minHeight: 38, borderWidth: 1, borderRadius: 11, paddingHorizontal: 12, justifyContent: 'center' },
+  logoButtonText: { fontSize: 11, fontWeight: '700' },
+  removeLogoButton: { padding: 8 },
   channelInfo: {
     flex: 1,
   },

@@ -4,6 +4,7 @@ const storage = SQLiteStorage;
 const PROFILE_KEY = 'creatorstudio.profile.v1';
 const THEME_KEY = 'creatorstudio.theme.v1';
 const REMINDERS_KEY = 'creatorstudio.uploadReminders.v1';
+const WORKSPACE_CHANNEL_KEY = 'creatorstudio.workspaceChannel.v1';
 
 export const defaultCreatorProfile = {
   name: '',
@@ -56,4 +57,16 @@ export async function getUploadRemindersEnabled() {
 
 export async function saveUploadRemindersEnabled(enabled) {
   await storage.setItemAsync(REMINDERS_KEY, enabled ? 'true' : 'false');
+}
+
+export async function getSelectedWorkspaceChannelId() {
+  const savedId = await storage.getItemAsync(WORKSPACE_CHANNEL_KEY);
+  if (!savedId || savedId === 'all') return null;
+  const channelId = Number(savedId);
+  return Number.isSafeInteger(channelId) && channelId > 0 ? channelId : null;
+}
+
+export async function saveSelectedWorkspaceChannelId(channelId) {
+  const value = channelId === null ? 'all' : String(Number(channelId));
+  await storage.setItemAsync(WORKSPACE_CHANNEL_KEY, value);
 }

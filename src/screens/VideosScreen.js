@@ -9,6 +9,7 @@ import { useTheme } from '../theme/ThemeContext';
 import GlassCard from '../components/GlassCard';
 import { getAllVideos } from '../database/repositories/videoRepository';
 import { getVideoProgress } from '../database/repositories/taskRepository';
+import { useWorkspace } from '../context/WorkspaceContext';
 
 const FILTERS = ['All', 'Idea', 'Planning', 'Editing', 'Ready to Publish', 'Published'];
 
@@ -28,17 +29,20 @@ function getCountdown(video) {
 
 export default function VideosScreen({ navigation }) {
   const { colors, isDark } = useTheme();
+  const { channelId: workspaceChannelId, refreshWorkspace } = useWorkspace();
   const [videos, setVideos] = useState([]);
   const [search, setSearch] = useState('');
   const [selectedFilter, setSelectedFilter] = useState('All');
-  const [selectedChannel, setSelectedChannel] = useState('All');
+  const [channelFilter, setChannelFilter] = useState({ workspaceId: null, id: 'All' });
+  const selectedChannel = channelFilter.workspaceId === workspaceChannelId ? channelFilter.id : 'All';
   const [selectedPriority, setSelectedPriority] = useState('All');
   const [loading, setLoading] = useState(true);
 
-  const loadVideos = async () => {
+  const loadVideos = useCallback(async () => {
     try {
       setLoading(true);
-      const data = await getAllVideos();
+      await refreshWorkspace();
+      const data = await getAllVideos(workspaceChannelId);
       const enriched = await Promise.all(data.map(async (video) => ({
         ...video,
         progress: await getVideoProgress(video.id),
@@ -49,9 +53,9 @@ export default function VideosScreen({ navigation }) {
     } finally {
       setLoading(false);
     }
-  };
+  }, [workspaceChannelId, refreshWorkspace]);
 
-  useFocusEffect(useCallback(() => { loadVideos(); }, []));
+  useFocusEffect(useCallback(() => { loadVideos(); }, [loadVideos]));
 
   const channelOptions = useMemo(() => {
     const uniqueChannels = new Map();
@@ -91,8 +95,7 @@ export default function VideosScreen({ navigation }) {
       video.channel_id ?? video.channel_name ?? 'unknown'
     );
 
-    const matchesChannel =
-      selectedChannel === 'All' || channelId === selectedChannel;
+    const matchesChannel = selectedChannel === 'All' || channelId === selectedChannel;
 
     const matchesPriority =
       selectedPriority === 'All' || video.priority === selectedPriority;
@@ -193,7 +196,7 @@ export default function VideosScreen({ navigation }) {
 
               return (
                 <TouchableOpacity
-                  onPress={() => setSelectedChannel(item.id)}
+                  onPress={() => setChannelFilter({ workspaceId: workspaceChannelId, id: item.id })}
                   style={[
                     styles.filter,
                     {
@@ -259,7 +262,7 @@ export default function VideosScreen({ navigation }) {
               onPress={() => {
                 setSearch('');
                 setSelectedFilter('All');
-                setSelectedChannel('All');
+                setChannelFilter({ workspaceId: workspaceChannelId, id: 'All' });
                 setSelectedPriority('All');
               }}
               style={styles.clearFilters}

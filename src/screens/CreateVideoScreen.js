@@ -9,6 +9,7 @@ import * as FileSystem from 'expo-file-system/legacy';
 import { useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../theme/ThemeContext';
+import { useWorkspace } from '../context/WorkspaceContext';
 import GlassCard from '../components/GlassCard';
 import { getDatabase } from '../database/database';
 import { getAllChannels } from '../database/repositories/channelRepository';
@@ -30,6 +31,7 @@ const TASK_OPTIONS = [
 
 export default function CreateVideoScreen({ navigation, route }) {
   const { colors, isDark } = useTheme();
+  const { channelId: workspaceChannelId, refreshWorkspace } = useWorkspace();
   const videoId = route?.params?.videoId;
   const sourceIdeaId = route?.params?.ideaId;
   const initialTitle = route?.params?.initialTitle;
@@ -60,9 +62,10 @@ export default function CreateVideoScreen({ navigation, route }) {
   const formatTime = (date) =>
     `${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
 
-  const loadScreenData = async () => {
+  const loadScreenData = useCallback(async () => {
     try {
-      const channelData = await getAllChannels();
+      const refreshedWorkspace = await refreshWorkspace();
+      const channelData = refreshedWorkspace.channels || await getAllChannels();
       setChannels(channelData);
 
       if (videoId) {
@@ -96,7 +99,10 @@ export default function CreateVideoScreen({ navigation, route }) {
         const savedTasks = await getTasksByVideoId(Number(videoId));
         setSelectedTasks(savedTasks.map((task) => task.task_name));
       } else {
-        setSelectedChannel(channelData[0] || null);
+        const activeChannelId = refreshedWorkspace.channelId;
+        setSelectedChannel(activeChannelId === null
+          ? null
+          : channelData.find((channel) => channel.id === activeChannelId) || null);
         setTitle(initialTitle || '');
         setDescription(initialDescription || '');
         setUploadDate(null);
@@ -112,9 +118,9 @@ export default function CreateVideoScreen({ navigation, route }) {
     } finally {
       setLoadingProject(false);
     }
-  };
+  }, [videoId, initialTitle, initialDescription, refreshWorkspace]);
 
-  useFocusEffect(useCallback(() => { loadScreenData(); }, [videoId, sourceIdeaId, initialTitle, initialDescription]));
+  useFocusEffect(useCallback(() => { loadScreenData(); }, [loadScreenData]));
 
   const toggleTask = (name) => {
     setSelectedTasks((current) =>
@@ -175,7 +181,7 @@ export default function CreateVideoScreen({ navigation, route }) {
 
     setSaving(true);
     const videoData = {
-      channel_id: selectedChannel.id,
+      channel_id: !isEditing && workspaceChannelId !== null ? workspaceChannelId : selectedChannel.id,
       title: title.trim(),
       description: description.trim(),
       upload_date: formatDate(uploadDate),
@@ -214,7 +220,7 @@ export default function CreateVideoScreen({ navigation, route }) {
         initialTitle: undefined,
         initialDescription: undefined,
       });
-      navigation.navigate('MainTabs', { screen: 'Videos' });
+      navigation.navigate('MainTabs', { screen: 'Video' });
     } catch (error) {
       console.error('Save video error:', error);
       Alert.alert('Error', 'Could not save your video project. Please try again.');
@@ -252,8 +258,8 @@ export default function CreateVideoScreen({ navigation, route }) {
         <GlassCard style={styles.card}>
           <Text style={[styles.sectionTitle, { color: colors.text }]}>Select Channel</Text>
           {channels.length === 0 ? (
-            <TouchableOpacity onPress={() => navigation.navigate('Channels')}><Text style={{ color: colors.primary }}>Create a channel first</Text></TouchableOpacity>
-          ) : channels.map((channel) => (
+            <TouchableOpacity onPress={() => navigation.navigate('ManageChannels')}><Text style={{ color: colors.primary }}>Create a channel first</Text></TouchableOpacity>
+          ) : channels.filter((channel) => isEditing || workspaceChannelId === null || channel.id === workspaceChannelId).map((channel) => (
             <TouchableOpacity key={channel.id} onPress={() => setSelectedChannel(channel)} style={[styles.channel, { borderColor: selectedChannel?.id === channel.id ? colors.primary : colors.border, backgroundColor: selectedChannel?.id === channel.id ? colors.primaryLight : colors.surface }]}>
               <Ionicons name="logo-youtube" color={colors.primary} size={18} />
               <Text style={{ color: colors.text, flex: 1, marginLeft: 10 }}>{channel.name}</Text>

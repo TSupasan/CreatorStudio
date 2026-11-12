@@ -83,8 +83,9 @@ export async function deleteContentSeries(seriesId) {
   await db.runAsync('DELETE FROM content_series WHERE id = ?', [Number(seriesId)]);
 }
 
-export async function getAllIdeas() {
+export async function getAllIdeas(channelId = null) {
   const db = await getDatabase();
+  const channelFilter = channelId === null ? '' : 'WHERE content_ideas.channel_id = ?';
   return db.getAllAsync(`
     SELECT content_ideas.*, idea_categories.name AS category_name,
            content_series.name AS series_name, channels.name AS channel_name
@@ -92,8 +93,9 @@ export async function getAllIdeas() {
     LEFT JOIN idea_categories ON idea_categories.id = content_ideas.category_id
     LEFT JOIN content_series ON content_series.id = content_ideas.series_id
     LEFT JOIN channels ON channels.id = content_ideas.channel_id
+    ${channelFilter}
     ORDER BY content_ideas.updated_at DESC, content_ideas.id DESC
-  `);
+  `, channelId === null ? [] : [Number(channelId)]);
 }
 
 export async function getIdeaById(ideaId) {

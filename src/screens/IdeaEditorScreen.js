@@ -26,6 +26,7 @@ import {
 } from '../database/repositories/ideaRepository';
 import { getAllChannels } from '../database/repositories/channelRepository';
 import { useTheme } from '../theme/ThemeContext';
+import { useWorkspace } from '../context/WorkspaceContext';
 
 const EDITABLE_STATUSES = ['New', 'Selected', 'Planned'];
 
@@ -71,6 +72,7 @@ function SelectionModal({ visible, title, items, selectedId, onSelect, onClose, 
 
 export default function IdeaEditorScreen({ navigation, route }) {
   const { colors, isDark } = useTheme();
+  const { channelId: workspaceChannelId } = useWorkspace();
   const ideaId = route?.params?.ideaId;
   const isEditing = Boolean(ideaId);
   const [categories, setCategories] = useState([]);
@@ -119,6 +121,8 @@ export default function IdeaEditorScreen({ navigation, route }) {
             ...idea,
             tagsText: parseIdeaTags(idea.tags).join(', '),
           });
+        } else {
+          setForm((current) => ({ ...current, channel_id: workspaceChannelId }));
         }
       } catch (error) {
         console.error('Idea editor loading error:', error);
@@ -129,7 +133,7 @@ export default function IdeaEditorScreen({ navigation, route }) {
     };
     loadEditor();
     return () => { active = false; };
-  }, [ideaId, isEditing, navigation]);
+  }, [ideaId, isEditing, navigation, workspaceChannelId]);
 
   useFocusEffect(
     React.useCallback(() => {
@@ -169,6 +173,10 @@ export default function IdeaEditorScreen({ navigation, route }) {
       Alert.alert('Title required', 'Add a title for this idea before saving.');
       return;
     }
+    if (!isEditing && workspaceChannelId === null && !form.channel_id) {
+      Alert.alert('Channel required', 'Choose a channel for this idea while using All Channels.');
+      return;
+    }
 
     setSaving(true);
     try {
@@ -179,7 +187,7 @@ export default function IdeaEditorScreen({ navigation, route }) {
         tags: form.tagsText.split(',').map((tag) => tag.trim()).filter(Boolean),
         category_id: form.category_id,
         series_id: form.series_id,
-        channel_id: form.channel_id,
+        channel_id: isEditing ? form.channel_id : workspaceChannelId ?? form.channel_id,
         status: form.status,
       };
       if (isEditing) await updateIdea(ideaId, data);
@@ -291,11 +299,17 @@ export default function IdeaEditorScreen({ navigation, route }) {
           </Pressable>
 
           <Text style={[styles.label, { color: colors.text, marginTop: 16 }]}>CHANNEL (OPTIONAL)</Text>
-          <Pressable accessibilityRole="button" onPress={() => setChannelSelectorVisible(true)} style={[styles.selectButton, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+          {workspaceChannelId !== null && !isEditing ? (
+            <View style={[styles.selectButton, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+              <Ionicons name="logo-youtube" size={18} color={colors.primary} />
+              <Text style={[styles.selectText, { color: selectedChannel ? colors.text : colors.textMuted }]}>{selectedChannel?.name || 'Selected workspace channel'}</Text>
+              <Ionicons name="lock-closed-outline" size={15} color={colors.textMuted} />
+            </View>
+          ) : <Pressable accessibilityRole="button" onPress={() => setChannelSelectorVisible(true)} style={[styles.selectButton, { backgroundColor: colors.surface, borderColor: colors.border }]}>
             <Ionicons name="logo-youtube" size={18} color={colors.primary} />
             <Text style={[styles.selectText, { color: selectedChannel ? colors.text : colors.textMuted }]}>{selectedChannel?.name || 'No channel selected'}</Text>
             <Ionicons name="chevron-down" size={17} color={colors.textMuted} />
-          </Pressable>
+          </Pressable>}
 
           <Text style={[styles.label, { color: colors.text, marginTop: 16 }]}>STATUS</Text>
           <View style={styles.statusOptions}>
@@ -362,7 +376,7 @@ export default function IdeaEditorScreen({ navigation, route }) {
           label: 'Open channel management',
           onPress: () => {
             setChannelSelectorVisible(false);
-            navigation.navigate('MainTabs', { screen: 'Channels' });
+            navigation.navigate('ManageChannels');
           },
         }}
         colors={colors}

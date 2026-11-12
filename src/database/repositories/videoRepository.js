@@ -11,15 +11,17 @@ async function insertVideo(db, video) {
   return result.lastInsertRowId;
 }
 
-export async function getAllVideos() {
+export async function getAllVideos(channelId = null) {
   const db = await getDatabase();
+  const channelFilter = channelId === null ? '' : 'WHERE videos.channel_id = ?';
 
   return await db.getAllAsync(`
     SELECT videos.*, channels.name AS channel_name
     FROM videos
     INNER JOIN channels ON videos.channel_id = channels.id
+    ${channelFilter}
     ORDER BY videos.created_at DESC
-  `);
+  `, channelId === null ? [] : [Number(channelId)]);
 }
 
 export async function getVideosByChannel(channelId) {

@@ -14,6 +14,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import GlassCard from '../components/GlassCard';
 import { useTheme } from '../theme/ThemeContext';
+import { useWorkspace } from '../context/WorkspaceContext';
 import { getAllVideos } from '../database/repositories/videoRepository';
 import { getVideoProgress } from '../database/repositories/taskRepository';
 
@@ -48,6 +49,7 @@ const getStatusColor = (status) => {
 
 export default function DashboardScreen({ navigation }) {
   const { colors, isDark } = useTheme();
+  const { channelId: selectedChannelId, refreshWorkspace } = useWorkspace();
   const fadeAnim = React.useRef(new Animated.Value(0)).current;
   const slideAnim = React.useRef(new Animated.Value(25)).current;
 
@@ -81,8 +83,10 @@ export default function DashboardScreen({ navigation }) {
 
   const loadDashboardData = useCallback(async () => {
     try {
+      setLoading(true);
       setLoadError(false);
-      const allVideos = await getAllVideos();
+      await refreshWorkspace();
+      const allVideos = await getAllVideos(selectedChannelId);
 
       const videosWithProgress = await Promise.all(
         allVideos.map(async (video) => {
@@ -132,7 +136,7 @@ export default function DashboardScreen({ navigation }) {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [selectedChannelId, refreshWorkspace]);
 
   useFocusEffect(
     useCallback(() => {
@@ -268,12 +272,12 @@ export default function DashboardScreen({ navigation }) {
             </View>
             <Pressable
               accessibilityRole="button"
-              accessibilityLabel="Open Settings and Profile"
-              onPress={() => navigation.navigate('Settings')}
+              accessibilityLabel="Open Profile"
+              onPress={() => navigation.navigate('Profile')}
               style={styles.profileButton}
             >
               <LinearGradient colors={['#8B78FF', '#5946D8']} style={styles.profileGradient}>
-                <Ionicons name="settings-outline" size={21} color="#FFFFFF" />
+                <Ionicons name="person-outline" size={21} color="#FFFFFF" />
               </LinearGradient>
             </Pressable>
           </View>
@@ -295,44 +299,6 @@ export default function DashboardScreen({ navigation }) {
               <Text style={styles.heroFooter}>Your ideas, organized.</Text>
             </View>
           </LinearGradient>
-
-          <Pressable
-            accessibilityRole="button"
-            onPress={() => navigation.navigate('BackupRestore')}
-            style={({ pressed }) => [styles.backupEntry, {
-              backgroundColor: pressed ? colors.primaryLight : colors.surface,
-              borderColor: colors.border,
-            }]}
-          >
-            <View style={[styles.backupEntryIcon, { backgroundColor: colors.primaryLight }]}>
-              <Ionicons name="cloud-download-outline" size={20} color={colors.primary} />
-            </View>
-            <View style={styles.backupEntryText}>
-              <Text style={[styles.backupEntryTitle, { color: colors.text }]}>Backup & Restore</Text>
-              <Text style={[styles.backupEntrySubtitle, { color: colors.textSecondary }]}>Save a local copy of your workspace</Text>
-            </View>
-            <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
-          </Pressable>
-
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel="Open Idea Vault"
-            onPress={() => navigation.navigate('IdeaVault')}
-            style={({ pressed }) => [styles.backupEntry, {
-              backgroundColor: pressed ? colors.primaryLight : colors.surface,
-              borderColor: colors.border,
-              marginTop: -15,
-            }]}
-          >
-            <View style={[styles.backupEntryIcon, { backgroundColor: colors.primaryLight }]}>
-              <Ionicons name="bulb-outline" size={20} color={colors.primary} />
-            </View>
-            <View style={styles.backupEntryText}>
-              <Text style={[styles.backupEntryTitle, { color: colors.text }]}>Idea Vault</Text>
-              <Text style={[styles.backupEntrySubtitle, { color: colors.textSecondary }]}>Capture and organize future videos</Text>
-            </View>
-            <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
-          </Pressable>
 
           <View style={styles.sectionHeader}>
             <Text style={[styles.sectionTitle, { color: colors.text }]}>Your Overview</Text>

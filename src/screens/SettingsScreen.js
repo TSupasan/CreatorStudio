@@ -1,8 +1,9 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
   Image,
+  Modal,
   Pressable,
   ScrollView,
   StatusBar,
@@ -24,6 +25,8 @@ import {
 } from '../database/repositories/settingsRepository';
 import { setUploadRemindersEnabled } from '../services/notificationService';
 import { useTheme } from '../theme/ThemeContext';
+import { useWorkspace } from '../context/WorkspaceContext';
+import { useFocusEffect } from '@react-navigation/native';
 import appConfig from '../../app.json';
 
 function SectionHeading({ title, caption, colors }) {
@@ -35,14 +38,17 @@ function SectionHeading({ title, caption, colors }) {
   );
 }
 
-export default function SettingsScreen({ navigation }) {
+export default function SettingsScreen({ navigation, route }) {
   const { colors, isDark, themeMode, themeLoaded, setThemeMode } = useTheme();
+  const { channels, channelId, refreshWorkspace, selectWorkspace, selectedChannel } = useWorkspace();
   const [profile, setProfile] = useState(defaultCreatorProfile);
   const [remindersEnabled, setRemindersEnabled] = useState(true);
   const [loading, setLoading] = useState(true);
   const [savingProfile, setSavingProfile] = useState(false);
   const [savingReminderPreference, setSavingReminderPreference] = useState(false);
   const [savingTheme, setSavingTheme] = useState(false);
+  const [workspacePickerVisible, setWorkspacePickerVisible] = useState(false);
+  const showWorkspacePicker = workspacePickerVisible || Boolean(route?.params?.openWorkspacePicker);
 
   useEffect(() => {
     let isActive = true;
@@ -64,6 +70,25 @@ export default function SettingsScreen({ navigation }) {
       isActive = false;
     };
   }, []);
+
+  useFocusEffect(useCallback(() => {
+    refreshWorkspace().catch((error) => console.error('Profile workspace loading error:', error));
+  }, [refreshWorkspace]));
+
+  const closeWorkspacePicker = () => {
+    setWorkspacePickerVisible(false);
+    if (route?.params?.openWorkspacePicker) navigation.setParams({ openWorkspacePicker: undefined });
+  };
+
+  const switchWorkspace = async (nextChannelId) => {
+    try {
+      await selectWorkspace(nextChannelId);
+      closeWorkspacePicker();
+      navigation.navigate('MainTabs', { screen: 'Home', params: { screen: 'Dashboard' } });
+    } catch (error) {
+      Alert.alert('Could not switch workspace', error.message || 'Please choose an available channel.');
+    }
+  };
 
   const updateProfileField = (field, value) => {
     setProfile((current) => ({ ...current, [field]: value }));
@@ -167,8 +192,8 @@ export default function SettingsScreen({ navigation }) {
             <Ionicons name="arrow-back" size={21} color={colors.text} />
           </Pressable>
           <View style={styles.headerText}>
-            <Text style={[styles.eyebrow, { color: colors.textSecondary }]}>PERSONALIZE YOUR SPACE</Text>
-            <Text style={[styles.title, { color: colors.text }]}>Settings</Text>
+            <Text style={[styles.eyebrow, { color: colors.textSecondary }]}>YOUR CREATOR WORKSPACE</Text>
+            <Text style={[styles.title, { color: colors.text }]}>Profile</Text>
           </View>
         </View>
 
@@ -179,6 +204,39 @@ export default function SettingsScreen({ navigation }) {
           </View>
         ) : (
           <>
+            <GlassCard padding={17} style={styles.card}>
+              <View style={styles.appIdentity}>
+                <Image source={require('../../assets/icon.png')} style={styles.appIcon} />
+                <View style={styles.appIdentityText}>
+                  <Text style={[styles.appTitle, { color: colors.text }]}>CreatorStudio</Text>
+                  <Text style={[styles.rowDescription, { color: colors.textSecondary }]}>Your Personal Content Workspace</Text>
+                </View>
+              </View>
+              <Text style={[styles.fieldLabel, { color: colors.textSecondary, marginTop: 18 }]}>CURRENT WORKSPACE</Text>
+              <Pressable accessibilityRole="button" onPress={() => setWorkspacePickerVisible(true)} style={[styles.workspaceRow, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+                <View style={[styles.workspaceIcon, { backgroundColor: colors.primaryLight }]}>
+                  {selectedChannel?.profile_image_uri
+                    ? <Image source={{ uri: selectedChannel.profile_image_uri }} style={styles.workspaceImage} />
+                    : <Ionicons name={selectedChannel ? 'logo-youtube' : 'apps-outline'} size={20} color={colors.primary} />}
+                </View>
+                <View style={styles.appIdentityText}>
+                  <Text style={[styles.rowTitle, { color: colors.text }]}>{selectedChannel?.name || 'All Channels'}</Text>
+                  <Text style={[styles.workspaceHint, { color: colors.textMuted }]}>Tap to switch channel workspace</Text>
+                </View>
+                <Ionicons name="chevron-down" size={18} color={colors.textMuted} />
+              </Pressable>
+              <Pressable accessibilityRole="button" onPress={() => navigation.navigate('ManageChannels')} style={[styles.profileLink, { borderColor: colors.border }]}>
+                <Ionicons name="people-outline" size={19} color={colors.primary} />
+                <Text style={[styles.rowTitle, styles.profileLinkText, { color: colors.text }]}>Manage channels</Text>
+                <Ionicons name="chevron-forward" size={17} color={colors.textMuted} />
+              </Pressable>
+              <Pressable accessibilityRole="button" onPress={() => navigation.navigate('BackupRestore')} style={styles.profileLink}>
+                <Ionicons name="archive-outline" size={19} color={colors.primary} />
+                <Text style={[styles.rowTitle, styles.profileLinkText, { color: colors.text }]}>Backup & Restore</Text>
+                <Ionicons name="chevron-forward" size={17} color={colors.textMuted} />
+              </Pressable>
+            </GlassCard>
+
             <SectionHeading title="Profile" caption="ON THIS DEVICE" colors={colors} />
             <GlassCard padding={17} style={styles.card}>
               <View style={styles.profileTop}>
@@ -314,6 +372,32 @@ export default function SettingsScreen({ navigation }) {
           </>
         )}
       </ScrollView>
+      <Modal visible={showWorkspacePicker} transparent animationType="slide" onRequestClose={closeWorkspacePicker}>
+        <Pressable style={styles.modalOverlay} onPress={closeWorkspacePicker}>
+          <Pressable style={[styles.modalCard, { backgroundColor: colors.surface }]} onPress={() => {}}>
+            <View style={styles.modalHeader}>
+              <Text style={[styles.sectionTitle, { color: colors.text }]}>Switch workspace</Text>
+              <Pressable accessibilityRole="button" onPress={closeWorkspacePicker} hitSlop={10}><Ionicons name="close" size={22} color={colors.textSecondary} /></Pressable>
+            </View>
+            <ScrollView>
+              <Pressable onPress={() => switchWorkspace(null)} style={[styles.workspaceOption, { borderBottomColor: colors.border }]}>
+                <View style={[styles.workspaceIcon, { backgroundColor: colors.primaryLight }]}><Ionicons name="apps-outline" size={20} color={colors.primary} /></View>
+                <Text style={[styles.rowTitle, styles.workspaceOptionText, { color: colors.text }]}>All Channels</Text>
+                {channelId === null ? <Ionicons name="checkmark-circle" size={20} color={colors.primary} /> : null}
+              </Pressable>
+              {channels.map((channel) => (
+                <Pressable key={channel.id} onPress={() => switchWorkspace(channel.id)} style={[styles.workspaceOption, { borderBottomColor: colors.border }]}>
+                  <View style={[styles.workspaceIcon, { backgroundColor: colors.primaryLight }]}>
+                    {channel.profile_image_uri ? <Image source={{ uri: channel.profile_image_uri }} style={styles.workspaceImage} /> : <Ionicons name="logo-youtube" size={20} color={colors.primary} />}
+                  </View>
+                  <Text numberOfLines={1} style={[styles.rowTitle, styles.workspaceOptionText, { color: colors.text }]}>{channel.name}</Text>
+                  {channelId === channel.id ? <Ionicons name="checkmark-circle" size={20} color={colors.primary} /> : null}
+                </Pressable>
+              ))}
+            </ScrollView>
+          </Pressable>
+        </Pressable>
+      </Modal>
     </View>
   );
 }
@@ -355,6 +439,21 @@ const styles = StyleSheet.create({
   aboutIcon: { width: 43, height: 43, borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
   aboutName: { fontSize: 15, fontWeight: '800' },
   aboutDescription: { fontSize: 12, lineHeight: 19, marginTop: 15 },
+  appIdentity: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  appIcon: { width: 52, height: 52, borderRadius: 16 },
+  appIdentityText: { flex: 1 },
+  appTitle: { fontSize: 16, fontWeight: '800', marginBottom: 4 },
+  workspaceRow: { minHeight: 62, borderWidth: 1, borderRadius: 14, flexDirection: 'row', alignItems: 'center', padding: 9, gap: 10 },
+  workspaceIcon: { width: 42, height: 42, borderRadius: 13, alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
+  workspaceImage: { width: '100%', height: '100%' },
+  workspaceHint: { fontSize: 10, marginTop: 3 },
+  profileLink: { minHeight: 48, borderTopWidth: StyleSheet.hairlineWidth, flexDirection: 'row', alignItems: 'center', gap: 10 },
+  profileLinkText: { flex: 1 },
+  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.45)', justifyContent: 'flex-end' },
+  modalCard: { maxHeight: '72%', minHeight: '35%', borderTopLeftRadius: 25, borderTopRightRadius: 25, paddingHorizontal: 20, paddingTop: 22, paddingBottom: 28 },
+  modalHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 },
+  workspaceOption: { minHeight: 59, borderBottomWidth: StyleSheet.hairlineWidth, flexDirection: 'row', alignItems: 'center', gap: 11 },
+  workspaceOptionText: { flex: 1 },
   offlineBadge: { flexDirection: 'row', alignItems: 'center', gap: 8, borderRadius: 12, padding: 11, marginTop: 15 },
   offlineText: { flex: 1, fontSize: 11, fontWeight: '600' },
   loadingState: { minHeight: 190, justifyContent: 'center', alignItems: 'center' },

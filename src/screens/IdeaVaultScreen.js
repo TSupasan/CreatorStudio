@@ -28,6 +28,7 @@ import {
 } from '../database/repositories/ideaRepository';
 import { getAllChannels } from '../database/repositories/channelRepository';
 import { useTheme } from '../theme/ThemeContext';
+import { useWorkspace } from '../context/WorkspaceContext';
 
 const STATUS_FILTERS = ['All', 'New', 'Selected', 'Planned', 'Converted'];
 
@@ -40,6 +41,7 @@ function formatDate(value) {
 
 export default function IdeaVaultScreen({ navigation }) {
   const { colors, isDark } = useTheme();
+  const { channelId: workspaceChannelId, selectedChannel, refreshWorkspace } = useWorkspace();
   const [ideas, setIdeas] = useState([]);
   const [categories, setCategories] = useState([]);
   const [series, setSeries] = useState([]);
@@ -47,7 +49,8 @@ export default function IdeaVaultScreen({ navigation }) {
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('All');
   const [seriesFilter, setSeriesFilter] = useState(null);
-  const [channelFilter, setChannelFilter] = useState('all');
+  const [channelFilterState, setChannelFilter] = useState({ workspaceId: null, id: 'all' });
+  const channelFilter = channelFilterState.workspaceId === workspaceChannelId ? channelFilterState.id : 'all';
   const [loading, setLoading] = useState(true);
   const [categoryModalVisible, setCategoryModalVisible] = useState(false);
   const [seriesModalVisible, setSeriesModalVisible] = useState(false);
@@ -57,8 +60,9 @@ export default function IdeaVaultScreen({ navigation }) {
 
   const loadVault = useCallback(async () => {
     try {
+      await refreshWorkspace();
       const [ideaRows, categoryRows, seriesRows, channelRows] = await Promise.all([
-        getAllIdeas(), getIdeaCategories(), getContentSeries(), getAllChannels(),
+        getAllIdeas(workspaceChannelId), getIdeaCategories(), getContentSeries(), getAllChannels(),
       ]);
       setIdeas(ideaRows);
       setCategories(categoryRows);
@@ -70,10 +74,9 @@ export default function IdeaVaultScreen({ navigation }) {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [workspaceChannelId, refreshWorkspace]);
 
   useFocusEffect(useCallback(() => { loadVault(); }, [loadVault]));
-
   const filteredIdeas = useMemo(() => {
     const query = search.trim().toLocaleLowerCase();
     return ideas.filter((idea) => {
@@ -83,12 +86,12 @@ export default function IdeaVaultScreen({ navigation }) {
         parseIdeaTags(idea.tags).some((tag) => tag.toLocaleLowerCase().includes(query));
       const matchesStatus = statusFilter === 'All' || idea.status === statusFilter;
       const matchesSeries = seriesFilter === null || idea.series_id === Number(seriesFilter);
-      const matchesChannel = channelFilter === 'all' || (channelFilter === 'unassigned'
+      const matchesChannel = workspaceChannelId !== null || channelFilter === 'all' || (channelFilter === 'unassigned'
         ? idea.channel_id === null
         : idea.channel_id === Number(channelFilter));
       return matchesSearch && matchesStatus && matchesSeries && matchesChannel;
     });
-  }, [ideas, search, statusFilter, seriesFilter, channelFilter]);
+  }, [ideas, search, statusFilter, seriesFilter, channelFilter, workspaceChannelId]);
 
   const confirmDeleteIdea = (idea) => {
     Alert.alert(
@@ -322,6 +325,7 @@ export default function IdeaVaultScreen({ navigation }) {
         })}
       </ScrollView>
 
+      {workspaceChannelId === null ? <>
       <Text style={[styles.filterLabel, { color: colors.textSecondary, marginTop: 16 }]}>CHANNEL</Text>
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chipList}>
         {[
@@ -331,17 +335,18 @@ export default function IdeaVaultScreen({ navigation }) {
         ].map((item) => {
           const selected = channelFilter === item.id;
           return (
-            <Pressable key={`channel-${item.id}`} onPress={() => setChannelFilter(item.id)} style={[styles.filterChip, { borderColor: selected ? colors.primary : colors.border, backgroundColor: selected ? colors.primaryLight : colors.surface }]}>
+            <Pressable key={`channel-${item.id}`} onPress={() => setChannelFilter({ workspaceId: workspaceChannelId, id: item.id })} style={[styles.filterChip, { borderColor: selected ? colors.primary : colors.border, backgroundColor: selected ? colors.primaryLight : colors.surface }]}>
               <Text style={[styles.filterChipText, { color: selected ? colors.primary : colors.textSecondary }]}>{item.name}</Text>
             </Pressable>
           );
         })}
       </ScrollView>
       {channels.length === 0 ? (
-        <Pressable onPress={() => navigation.navigate('MainTabs', { screen: 'Channels' })} style={styles.channelManagementLink}>
+        <Pressable onPress={() => navigation.navigate('ManageChannels')} style={styles.channelManagementLink}>
           <Text style={[styles.channelManagementText, { color: colors.primary }]}>No channels available · Open channel management</Text>
         </Pressable>
       ) : null}
+      </> : <Text style={[styles.activeWorkspaceLabel, { color: colors.textMuted }]}>CHANNEL · {selectedChannel?.name || 'Selected channel'}</Text>}
 
       <Text style={[styles.filterLabel, { color: colors.textSecondary, marginTop: 16 }]}>STATUS</Text>
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chipList}>
@@ -469,6 +474,7 @@ const styles = StyleSheet.create({
   ideaChannel: { fontSize: 9, marginTop: 4 },
   channelManagementLink: { alignSelf: 'flex-start', paddingVertical: 9 },
   channelManagementText: { fontSize: 10, fontWeight: '700' },
+  activeWorkspaceLabel: { fontSize: 9, fontWeight: '800', letterSpacing: 1.1, marginTop: 16, marginBottom: 9 },
   ideaDescription: { fontSize: 11, lineHeight: 17, marginTop: 10 },
   tagRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: 10 },
   tag: { fontSize: 9, fontWeight: '700', paddingHorizontal: 8, paddingVertical: 5, borderRadius: 7, overflow: 'hidden' },
