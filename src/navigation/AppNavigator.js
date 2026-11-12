@@ -10,6 +10,8 @@ import VideoDetailsScreen from '../screens/VideoDetailsScreen';
 import CalendarScreen from '../screens/CalendarScreen';
 import BackupRestoreScreen from '../screens/BackupRestoreScreen';
 import SettingsScreen from '../screens/SettingsScreen';
+import IdeaVaultScreen from '../screens/IdeaVaultScreen';
+import IdeaEditorScreen from '../screens/IdeaEditorScreen';
 
 import CustomTabBar from './CustomTabBar';
 
@@ -60,6 +62,16 @@ export default function AppNavigator() {
       <Stack.Screen
         name="Settings"
         component={SettingsScreen}
+      />
+
+      <Stack.Screen
+        name="IdeaVault"
+        component={IdeaVaultScreen}
+      />
+
+      <Stack.Screen
+        name="IdeaEditor"
+        component={IdeaEditorScreen}
       />
     </Stack.Navigator>
   );

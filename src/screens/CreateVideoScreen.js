@@ -12,7 +12,7 @@ import { useTheme } from '../theme/ThemeContext';
 import GlassCard from '../components/GlassCard';
 import { getDatabase } from '../database/database';
 import { getAllChannels } from '../database/repositories/channelRepository';
-import { addVideo, updateVideo } from '../database/repositories/videoRepository';
+import { addVideo, createVideoFromIdea, updateVideo } from '../database/repositories/videoRepository';
 import {
   getTasksByVideoId,
   saveVideoTasks,
@@ -31,6 +31,9 @@ const TASK_OPTIONS = [
 export default function CreateVideoScreen({ navigation, route }) {
   const { colors, isDark } = useTheme();
   const videoId = route?.params?.videoId;
+  const sourceIdeaId = route?.params?.ideaId;
+  const initialTitle = route?.params?.initialTitle;
+  const initialDescription = route?.params?.initialDescription;
   const isEditing = Boolean(videoId);
 
   const [channels, setChannels] = useState([]);
@@ -94,8 +97,8 @@ export default function CreateVideoScreen({ navigation, route }) {
         setSelectedTasks(savedTasks.map((task) => task.task_name));
       } else {
         setSelectedChannel(channelData[0] || null);
-        setTitle('');
-        setDescription('');
+        setTitle(initialTitle || '');
+        setDescription(initialDescription || '');
         setUploadDate(null);
         setUploadTime(new Date());
         setStatus('Idea');
@@ -111,7 +114,7 @@ export default function CreateVideoScreen({ navigation, route }) {
     }
   };
 
-  useFocusEffect(useCallback(() => { loadScreenData(); }, [videoId]));
+  useFocusEffect(useCallback(() => { loadScreenData(); }, [videoId, sourceIdeaId, initialTitle, initialDescription]));
 
   const toggleTask = (name) => {
     setSelectedTasks((current) =>
@@ -190,6 +193,9 @@ export default function CreateVideoScreen({ navigation, route }) {
         await updateVideo(savedVideoId, videoData);
         await replaceVideoTasks(savedVideoId, selectedTasks);
         Alert.alert('Project Updated', 'Your video project was updated successfully.');
+      } else if (sourceIdeaId) {
+        savedVideoId = await createVideoFromIdea(videoData, selectedTasks, sourceIdeaId);
+        Alert.alert('Idea Converted', 'Your video was created and linked to the original idea.');
       } else {
         savedVideoId = await addVideo(videoData);
         await saveVideoTasks(savedVideoId, selectedTasks);
@@ -202,7 +208,12 @@ export default function CreateVideoScreen({ navigation, route }) {
         console.error('Notification scheduling error:', notificationError);
       }
 
-      navigation.setParams({ videoId: undefined });
+      navigation.setParams({
+        videoId: undefined,
+        ideaId: undefined,
+        initialTitle: undefined,
+        initialDescription: undefined,
+      });
       navigation.navigate('MainTabs', { screen: 'Videos' });
     } catch (error) {
       console.error('Save video error:', error);
