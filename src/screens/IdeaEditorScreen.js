@@ -42,7 +42,7 @@ function SelectionModal({ visible, title, items, selectedId, onSelect, onClose, 
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
       <View style={[styles.modalOverlay, { backgroundColor: colors.modalOverlay }]}>
-        <View style={[styles.modalCard, { backgroundColor: colors.surface }]}>
+        <View style={[styles.modalCard, { backgroundColor: colors.glassMaterial ? colors.card : colors.surface, borderColor: colors.glassBorder || colors.border, borderTopWidth: colors.glassMaterial ? 1 : 0 }]}>
           <View style={styles.modalHeader}>
             <Text style={[styles.modalTitle, { color: colors.text }]}>{title}</Text>
             <Pressable onPress={onClose} hitSlop={10}><Ionicons name="close" size={22} color={colors.textSecondary} /></Pressable>

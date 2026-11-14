@@ -29,6 +29,27 @@ const THEME_DEFINITIONS = {
     light: { background: '#F4F5F7', backgroundSecondary: '#E9EBEF', surface: '#FFFFFF', surfaceElevated: '#FFFFFF', card: 'rgba(255,255,255,0.92)', text: '#20242B', textSecondary: '#5F6874', textMuted: '#89919A', accent: '#3659A8', accentSecondary: '#59768E', border: '#DDE1E6', divider: '#EAEDF0', success: '#287A5A', warning: '#A45D00', error: '#B4233B', inputBackground: '#F8F9FA', tabBarBackground: 'rgba(255,255,255,0.94)' },
     dark: { background: '#111317', backgroundSecondary: '#191C22', surface: '#20242B', surfaceElevated: '#292E37', card: 'rgba(32,36,43,0.95)', text: '#F4F5F7', textSecondary: '#BEC3CA', textMuted: '#858D98', accent: '#8AABF2', accentSecondary: '#77B7C8', border: '#373D47', divider: '#2B3039', success: '#69DDA5', warning: '#FFD166', error: '#FF8297', inputBackground: '#191C22', tabBarBackground: 'rgba(26,29,35,0.96)' },
   },
+  'Apple Liquid Glass': {
+    description: 'Soft frosted surfaces with clear, elegant blue accents.',
+    glassMaterial: true,
+    glassBorder: 'rgba(255,255,255,0.76)',
+    glassHighlight: ['rgba(255,255,255,0.52)', 'rgba(255,255,255,0.08)'],
+    glassBlurIntensity: 38,
+    glassShadowOpacity: 0.12,
+    light: { background: '#EEF3F8', backgroundSecondary: '#E1EAF3', surface: '#F7FAFD', surfaceElevated: '#FFFFFF', card: 'rgba(255,255,255,0.62)', text: '#172437', textSecondary: '#506177', textMuted: '#748197', accent: '#1877E8', accentSecondary: '#54B8E8', border: '#D7E0EA', divider: '#E2E9F0', success: '#13845D', warning: '#9B5C00', error: '#B4233B', inputBackground: 'rgba(255,255,255,0.78)', tabBarBackground: 'rgba(247,250,253,0.72)' },
+    dark: { background: '#080E18', backgroundSecondary: '#111C2A', surface: '#172233', surfaceElevated: '#1D2B40', card: 'rgba(25,40,60,0.72)', text: '#F3F7FE', textSecondary: '#B7C5D7', textMuted: '#8494AA', accent: '#70AEFF', accentSecondary: '#61D2EE', border: '#35465D', divider: '#26374D', success: '#65DDA6', warning: '#FFD166', error: '#FF8297', inputBackground: 'rgba(21,34,52,0.88)', tabBarBackground: 'rgba(15,26,40,0.82)' },
+  },
+  'Liquid Glass Aurora': {
+    description: 'A glowing blue and cyan aurora over deep glass surfaces.',
+    glassMaterial: true,
+    auroraBackdrop: true,
+    glassBorder: 'rgba(182,242,255,0.38)',
+    glassHighlight: ['rgba(216,250,255,0.25)', 'rgba(85,221,244,0.04)'],
+    glassBlurIntensity: 42,
+    glassShadowOpacity: 0.16,
+    light: { background: '#EAF5FB', backgroundSecondary: '#DDF2F0', surface: '#F5FBFD', surfaceElevated: '#FFFFFF', card: 'rgba(242,252,255,0.68)', text: '#10243A', textSecondary: '#436477', textMuted: '#6E8797', accent: '#087FC4', accentSecondary: '#0FAF9C', border: '#B8DDE5', divider: '#D6E9EC', success: '#13845D', warning: '#9B5C00', error: '#B4233B', inputBackground: 'rgba(245,252,255,0.86)', tabBarBackground: 'rgba(239,250,253,0.78)' },
+    dark: { background: '#06121E', backgroundSecondary: '#082730', surface: '#0D2831', surfaceElevated: '#123541', card: 'rgba(10,37,49,0.74)', text: '#E9FBFF', textSecondary: '#A7D4D9', textMuted: '#6FA2AA', accent: '#42C8FF', accentSecondary: '#39E0B5', border: '#235763', divider: '#183D49', success: '#62E3A4', warning: '#FFD166', error: '#FF8297', inputBackground: 'rgba(10,34,45,0.90)', tabBarBackground: 'rgba(7,27,37,0.86)' },
+  },
 };
 
 export const visualThemeNames = Object.keys(THEME_DEFINITIONS);

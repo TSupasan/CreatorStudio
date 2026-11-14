@@ -385,7 +385,7 @@ export default function IdeaVaultScreen({ navigation }) {
 
       <Modal visible={categoryModalVisible} transparent animationType="slide" onRequestClose={() => setCategoryModalVisible(false)}>
         <View style={[styles.modalOverlay, { backgroundColor: colors.modalOverlay }]}>
-          <View style={[styles.modalCard, { backgroundColor: colors.surface }]}>
+          <View style={[styles.modalCard, { backgroundColor: colors.glassMaterial ? colors.card : colors.surface, borderColor: colors.glassBorder || colors.border, borderTopWidth: colors.glassMaterial ? 1 : 0 }]}>
             <View style={styles.modalHeader}>
               <View><Text style={[styles.modalTitle, { color: colors.text }]}>Idea categories</Text><Text style={[styles.modalSubtitle, { color: colors.textSecondary }]}>Built-in and custom categories</Text></View>
               <Pressable onPress={() => setCategoryModalVisible(false)} hitSlop={10}><Ionicons name="close" size={22} color={colors.textSecondary} /></Pressable>
@@ -410,7 +410,7 @@ export default function IdeaVaultScreen({ navigation }) {
 
       <Modal visible={seriesModalVisible} transparent animationType="slide" onRequestClose={() => setSeriesModalVisible(false)}>
         <View style={[styles.modalOverlay, { backgroundColor: colors.modalOverlay }]}>
-          <View style={[styles.modalCard, { backgroundColor: colors.surface }]}>
+          <View style={[styles.modalCard, { backgroundColor: colors.glassMaterial ? colors.card : colors.surface, borderColor: colors.glassBorder || colors.border, borderTopWidth: colors.glassMaterial ? 1 : 0 }]}>
             <View style={styles.modalHeader}>
               <View><Text style={[styles.modalTitle, { color: colors.text }]}>Content series</Text><Text style={[styles.modalSubtitle, { color: colors.textSecondary }]}>Select a series to view its ideas</Text></View>
               <Pressable onPress={() => setSeriesModalVisible(false)} hitSlop={10}><Ionicons name="close" size={22} color={colors.textSecondary} /></Pressable>

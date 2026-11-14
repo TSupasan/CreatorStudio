@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Alert, Platform, Pressable, ScrollView, StatusBar, StyleSheet, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import Text from '../components/ThemedText';
@@ -16,6 +16,8 @@ const THEME_DESCRIPTIONS = {
   'Ocean Glass': 'Cool blue, cyan and teal surfaces',
   'Midnight Glass': 'Near-black navy and electric blue',
   'Minimal Studio': 'Clean neutrals with a confident accent',
+  'Apple Liquid Glass': 'Soft frosted surfaces with elegant blue accents',
+  'Liquid Glass Aurora': 'Glowing blue and cyan over deep glass surfaces',
 };
 
 const TYPOGRAPHY_OPTIONS = [
@@ -51,12 +53,15 @@ function getSwatchCheckColor(hex) {
   return luminance > 0.179 ? '#17202A' : '#FFFFFF';
 }
 
-function ThemeSwatch({ name, colors, selected, onPress }) {
-  return <Pressable accessibilityRole="radio" accessibilityState={{ checked: selected }} onPress={onPress} style={[styles.themeTile, { backgroundColor: colors.surface, borderColor: selected ? colors.primary : colors.border }]}>
+function ThemeSwatch({ name, colors, selected, onPress, disabled }) {
+  const tileSurface = colors.glassMaterial ? colors.card : colors.surface;
+  const tileBorder = colors.glassMaterial ? colors.glassBorder : colors.border;
+
+  return <Pressable accessibilityRole="radio" accessibilityState={{ checked: selected, disabled }} disabled={disabled} onPress={onPress} style={[styles.themeTile, { backgroundColor: tileSurface, borderColor: selected ? colors.primary : tileBorder, opacity: disabled ? 0.7 : 1 }]}>
     <View style={[styles.swatchHeader, { backgroundColor: colors.background }]}>
       <View style={[styles.swatchLine, { backgroundColor: colors.text }]} />
       <View style={[styles.swatchLineShort, { backgroundColor: colors.textMuted }]} />
-      <View style={[styles.swatchCard, { backgroundColor: colors.surfaceSecondary, borderColor: colors.border }]}>
+      <View style={[styles.swatchCard, { backgroundColor: colors.glassMaterial ? colors.card : colors.surfaceSecondary, borderColor: tileBorder }]}>
         <View style={[styles.swatchDot, { backgroundColor: colors.primary }]} />
         <View style={[styles.swatchDot, { backgroundColor: colors.secondary }]} />
         <View style={[styles.swatchDot, { backgroundColor: colors.success }]} />
@@ -76,9 +81,14 @@ export default function ThemeSelectionScreen({ navigation }) {
   const [draftTypography, setDraftTypography] = useState(typographyStyle || 'default');
   const [saving, setSaving] = useState(false);
   const [showAccentError, setShowAccentError] = useState(false);
+  const localThemeSelection = useRef(false);
 
   useEffect(() => {
     if (!preferencesReady) return;
+    if (localThemeSelection.current) {
+      localThemeSelection.current = false;
+      return;
+    }
     setDraftTheme(themeName || defaultVisualTheme);
     setAccentInput(customAccent || '');
     setDraftTypography(typographyStyle || 'default');
@@ -100,6 +110,21 @@ export default function ThemeSelectionScreen({ navigation }) {
       Alert.alert('Theme applied', `${draftTheme} is now active throughout CreatorStudio.`);
       navigation.goBack();
     } catch (error) {
+      console.warn('Could not save visual theme:', error);
+      Alert.alert('Could not apply theme', 'Your previous appearance is still active. Please try again.');
+    } finally { setSaving(false); }
+  };
+
+  const selectTheme = async (name) => {
+    setDraftTheme(name);
+    if (saving || !preferencesReady || name === themeName) return;
+    setSaving(true);
+    localThemeSelection.current = true;
+    try {
+      await setVisualPreferences({ visualTheme: name });
+    } catch (error) {
+      localThemeSelection.current = false;
+      setDraftTheme(themeName || defaultVisualTheme);
       console.warn('Could not save visual theme:', error);
       Alert.alert('Could not apply theme', 'Your previous appearance is still active. Please try again.');
     } finally { setSaving(false); }
@@ -146,7 +171,7 @@ export default function ThemeSelectionScreen({ navigation }) {
 
       <View style={styles.sectionHeading}><Text style={[styles.sectionTitle, { color: colors.text }]}>Choose a visual theme</Text><Text style={[styles.sectionHint, { color: colors.textMuted }]}>{isDark ? 'Dark palette preview' : 'Light palette preview'}</Text></View>
       <View style={styles.themeGrid}>
-        {visualThemeNames.map((name) => <ThemeSwatch key={name} name={name} colors={getThemePalette(name, isDark ? 'dark' : 'light', normalizedAccent)} selected={draftTheme === name} onPress={() => setDraftTheme(name)} />)}
+        {visualThemeNames.map((name) => <ThemeSwatch key={name} name={name} colors={getThemePalette(name, isDark ? 'dark' : 'light', normalizedAccent)} selected={draftTheme === name} disabled={saving || !preferencesReady} onPress={() => selectTheme(name)} />)}
       </View>
 
       <Text style={[styles.sectionTitle, { color: colors.text, marginBottom: 12, marginTop: 10 }]}>Custom accent color</Text>

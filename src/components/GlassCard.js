@@ -7,6 +7,7 @@ import {
   Platform,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import { BlurView } from 'expo-blur';
 
 import { useTheme } from '../theme/ThemeContext';
 
@@ -15,7 +16,8 @@ export default function GlassCard({
   style,
   padding = 18,
 }) {
-  const { colors } = useTheme();
+  const { colors, isDark } = useTheme();
+  const glassMaterial = Boolean(colors.glassMaterial);
 
   return (
     <View
@@ -24,17 +26,26 @@ export default function GlassCard({
         style,
         {
           backgroundColor: colors.card || colors.glass,
-          borderColor: colors.border,
+          borderColor: glassMaterial ? colors.glassBorder : colors.border,
           padding,
           shadowColor: colors.shadowColor,
           borderRadius: colors.cardRadius,
           elevation: colors.cardElevation,
+          ...(glassMaterial ? { shadowOpacity: colors.glassShadowOpacity } : {}),
         },
       ]}
     >
+      {glassMaterial && Platform.OS === 'ios' ? (
+        <BlurView
+          pointerEvents="none"
+          intensity={colors.glassBlurIntensity}
+          tint={isDark ? 'dark' : 'light'}
+          style={[StyleSheet.absoluteFill, { borderRadius: colors.cardRadius }]}
+        />
+      ) : null}
       <LinearGradient
         pointerEvents="none"
-        colors={['rgba(255,255,255,0.075)', 'rgba(255,255,255,0.015)']}
+        colors={glassMaterial ? colors.glassHighlight : ['rgba(255,255,255,0.075)', 'rgba(255,255,255,0.015)']}
         start={{ x: 0.1, y: 0 }}
         end={{ x: 0.9, y: 1 }}
         style={[StyleSheet.absoluteFill, { borderRadius: colors.cardRadius }]}
