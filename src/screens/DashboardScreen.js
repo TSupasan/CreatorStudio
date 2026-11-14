@@ -17,8 +17,7 @@ import { Ionicons } from '@expo/vector-icons';
 import GlassCard from '../components/GlassCard';
 import { useTheme } from '../theme/ThemeContext';
 import { useWorkspace } from '../context/WorkspaceContext';
-import { getAllVideos } from '../database/repositories/videoRepository';
-import { getVideoProgress } from '../database/repositories/taskRepository';
+import { getAllVideosWithProgress } from '../database/repositories/videoRepository';
 import { useAppPreferences } from '../context/AppPreferencesContext';
 import { formatStoredDateTime } from '../utils/datePreferences';
 
@@ -43,7 +42,7 @@ const getStatusColor = (status, colors) => {
 export default function DashboardScreen({ navigation }) {
   const { colors, isDark } = useTheme();
   const { preferences } = useAppPreferences();
-  const { channelId: selectedChannelId, refreshWorkspace } = useWorkspace();
+  const { refreshWorkspace } = useWorkspace();
   const fadeAnim = React.useRef(new Animated.Value(0)).current;
   const slideAnim = React.useRef(new Animated.Value(25)).current;
 
@@ -79,15 +78,9 @@ export default function DashboardScreen({ navigation }) {
     try {
       setLoading(true);
       setLoadError(false);
-      await refreshWorkspace();
-      const allVideos = await getAllVideos(selectedChannelId);
-
-      const videosWithProgress = await Promise.all(
-        allVideos.map(async (video) => {
-          const progress = await getVideoProgress(video.id);
-          return { ...video, progress };
-        })
-      );
+      const workspace = await refreshWorkspace();
+      const videosWithProgress = await getAllVideosWithProgress(workspace.channelId);
+      const allVideos = videosWithProgress;
 
       const today = getLocalDateString();
 
@@ -130,7 +123,7 @@ export default function DashboardScreen({ navigation }) {
     } finally {
       setLoading(false);
     }
-  }, [selectedChannelId, refreshWorkspace, colors]);
+  }, [refreshWorkspace, colors]);
 
   useFocusEffect(
     useCallback(() => {

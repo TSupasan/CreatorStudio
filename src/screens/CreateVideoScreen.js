@@ -199,18 +199,23 @@ export default function CreateVideoScreen({ navigation, route }) {
 
     try {
       let savedVideoId;
+      const db = await getDatabase();
 
       if (isEditing) {
         savedVideoId = Number(videoId);
-        await updateVideo(savedVideoId, videoData);
-        await replaceVideoTasks(savedVideoId, selectedTasks);
+        await db.withTransactionAsync(async () => {
+          await updateVideo(savedVideoId, videoData);
+          await replaceVideoTasks(savedVideoId, selectedTasks);
+        });
         Alert.alert('Project Updated', 'Your video project was updated successfully.');
       } else if (sourceIdeaId) {
         savedVideoId = await createVideoFromIdea(videoData, selectedTasks, sourceIdeaId);
         Alert.alert('Idea Converted', 'Your video was created and linked to the original idea.');
       } else {
-        savedVideoId = await addVideo(videoData);
-        await saveVideoTasks(savedVideoId, selectedTasks);
+        await db.withTransactionAsync(async () => {
+          savedVideoId = await addVideo(videoData);
+          await saveVideoTasks(savedVideoId, selectedTasks);
+        });
         Alert.alert('Project Created', 'Your video project was saved successfully.');
       }
 

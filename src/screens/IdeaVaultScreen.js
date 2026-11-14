@@ -58,9 +58,9 @@ export default function IdeaVaultScreen({ navigation }) {
 
   const loadVault = useCallback(async () => {
     try {
-      await refreshWorkspace();
+      const workspace = await refreshWorkspace();
       const [ideaRows, categoryRows, seriesRows, channelRows] = await Promise.all([
-        getAllIdeas(workspaceChannelId), getIdeaCategories(), getContentSeries(), getAllChannels(),
+        getAllIdeas(workspace.channelId), getIdeaCategories(), getContentSeries(), getAllChannels(),
       ]);
       setIdeas(ideaRows);
       setCategories(categoryRows);

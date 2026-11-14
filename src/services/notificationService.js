@@ -107,8 +107,15 @@ export async function syncVideoReminder(videoId, video) {
     return { scheduled: false, reason: 'not-scheduled' };
   }
 
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(video.upload_date) || !/^\d{2}:\d{2}$/.test(video.upload_time)) {
+    return { scheduled: false, reason: 'invalid-date' };
+  }
+
   const [year, month, day] = video.upload_date.split('-').map(Number);
   const [hour, minute] = video.upload_time.split(':').map(Number);
+  if (month < 1 || month > 12 || day < 1 || day > 31 || hour > 23 || minute > 59) {
+    return { scheduled: false, reason: 'invalid-date' };
+  }
 
   const uploadDate = new Date(year, month - 1, day, hour, minute, 0, 0);
 
@@ -116,7 +123,9 @@ export async function syncVideoReminder(videoId, video) {
     Number.isNaN(uploadDate.getTime()) ||
     uploadDate.getFullYear() !== year ||
     uploadDate.getMonth() !== month - 1 ||
-    uploadDate.getDate() !== day
+    uploadDate.getDate() !== day ||
+    uploadDate.getHours() !== hour ||
+    uploadDate.getMinutes() !== minute
   ) {
     return { scheduled: false, reason: 'invalid-date' };
   }

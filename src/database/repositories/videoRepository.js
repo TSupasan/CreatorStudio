@@ -24,6 +24,35 @@ export async function getAllVideos(channelId = null) {
   `, channelId === null ? [] : [Number(channelId)]);
 }
 
+export async function getAllVideosWithProgress(channelId = null) {
+  const db = await getDatabase();
+  const channelFilter = channelId === null ? '' : 'WHERE videos.channel_id = ?';
+  const videos = await db.getAllAsync(`
+    SELECT videos.*, channels.name AS channel_name,
+           COUNT(tasks.id) AS task_total,
+           COALESCE(SUM(tasks.is_completed), 0) AS task_completed
+    FROM videos
+    INNER JOIN channels ON videos.channel_id = channels.id
+    LEFT JOIN tasks ON tasks.video_id = videos.id
+    ${channelFilter}
+    GROUP BY videos.id
+    ORDER BY videos.created_at DESC
+  `, channelId === null ? [] : [Number(channelId)]);
+
+  return videos.map(({ task_total: rawTotal, task_completed: rawCompleted, ...video }) => {
+    const total = Number(rawTotal || 0);
+    const completed = Number(rawCompleted || 0);
+    return {
+      ...video,
+      progress: {
+        total,
+        completed,
+        percentage: total === 0 ? 0 : Math.round((completed / total) * 100),
+      },
+    };
+  });
+}
+
 export async function getVideosByChannel(channelId) {
   const db = await getDatabase();
 

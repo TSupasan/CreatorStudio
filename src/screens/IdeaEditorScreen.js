@@ -174,11 +174,6 @@ export default function IdeaEditorScreen({ navigation, route }) {
       Alert.alert('Title required', 'Add a title for this idea before saving.');
       return;
     }
-    if (!isEditing && workspaceChannelId === null && !form.channel_id) {
-      Alert.alert('Channel required', 'Choose a channel for this idea while using All Channels.');
-      return;
-    }
-
     setSaving(true);
     try {
       const data = {
@@ -188,7 +183,7 @@ export default function IdeaEditorScreen({ navigation, route }) {
         tags: form.tagsText.split(',').map((tag) => tag.trim()).filter(Boolean),
         category_id: form.category_id,
         series_id: form.series_id,
-        channel_id: isEditing ? form.channel_id : workspaceChannelId ?? form.channel_id,
+        channel_id: form.channel_id || null,
         status: form.status,
       };
       if (isEditing) await updateIdea(ideaId, data);

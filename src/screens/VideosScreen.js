@@ -11,8 +11,7 @@ import { useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../theme/ThemeContext';
 import GlassCard from '../components/GlassCard';
-import { getAllVideos } from '../database/repositories/videoRepository';
-import { getVideoProgress } from '../database/repositories/taskRepository';
+import { getAllVideosWithProgress } from '../database/repositories/videoRepository';
 import { useWorkspace } from '../context/WorkspaceContext';
 
 const FILTERS = ['All', 'Idea', 'Planning', 'Editing', 'Ready to Publish', 'Published'];
@@ -45,13 +44,8 @@ export default function VideosScreen({ navigation }) {
   const loadVideos = useCallback(async () => {
     try {
       setLoading(true);
-      await refreshWorkspace();
-      const data = await getAllVideos(workspaceChannelId);
-      const enriched = await Promise.all(data.map(async (video) => ({
-        ...video,
-        progress: await getVideoProgress(video.id),
-      })));
-      setVideos(enriched);
+      const workspace = await refreshWorkspace();
+      setVideos(await getAllVideosWithProgress(workspace.channelId));
     } catch (error) {
       console.error('Failed to load videos:', error);
     } finally {

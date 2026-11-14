@@ -37,7 +37,7 @@ function getMonthLabel(date) {
 export default function CalendarScreen({ navigation }) {
   const { colors, isDark } = useTheme();
   const { preferences } = useAppPreferences();
-  const { channelId: workspaceChannelId, refreshWorkspace } = useWorkspace();
+  const { refreshWorkspace } = useWorkspace();
 
   const scrollRef = useRef(null);
 
@@ -66,8 +66,8 @@ export default function CalendarScreen({ navigation }) {
 
       setError('');
 
-      await refreshWorkspace();
-      const result = await getAllVideos(workspaceChannelId);
+      const workspace = await refreshWorkspace();
+      const result = await getAllVideos(workspace.channelId);
       setVideos(Array.isArray(result) ? result : []);
     } catch (err) {
       console.error('Calendar loading error:', err);
@@ -76,7 +76,7 @@ export default function CalendarScreen({ navigation }) {
       setLoading(false);
       setRefreshing(false);
     }
-  }, [workspaceChannelId, refreshWorkspace]);
+  }, [refreshWorkspace]);
 
   useFocusEffect(
     useCallback(() => {
@@ -168,7 +168,7 @@ export default function CalendarScreen({ navigation }) {
     loadVideos(false);
   };
 
-  const styles = StyleSheet.create({
+  const styles = useMemo(() => StyleSheet.create({
     container: {
       flex: 1,
       backgroundColor: background,
@@ -368,7 +368,7 @@ export default function CalendarScreen({ navigation }) {
       textAlign: 'center',
       marginVertical: 20,
     },
-  });
+  }), [colors]);
 
   return (
     <View style={styles.container}>
