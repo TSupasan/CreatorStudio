@@ -1,0 +1,141 @@
+﻿import { getDatabase } from '../database';
+
+async function insertVideo(db, video) {
+  const result = await db.runAsync(
+    `INSERT INTO videos
+     (channel_id, title, description, thumbnail_uri, upload_date, upload_time, status, priority)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+    [video.channel_id, video.title, video.description || '', video.thumbnail_uri || null,
+      video.upload_date || null, video.upload_time || null, video.status || 'Idea', video.priority || 'Medium']
+  );
+  return result.lastInsertRowId;
+}
+
+export async function getAllVideos(channelId = null) {
+  const db = await getDatabase();
+  const channelFilter = channelId === null ? '' : 'WHERE videos.channel_id = ?';
+
+  return await db.getAllAsync(`
+    SELECT videos.*, channels.name AS channel_name
+    FROM videos
+    INNER JOIN channels ON videos.channel_id = channels.id
+    ${channelFilter}
+    ORDER BY videos.created_at DESC
+  `, channelId === null ? [] : [Number(channelId)]);
+}
+
+export async function getAllVideosWithProgress(channelId = null) {
+  const db = await getDatabase();
+  const channelFilter = channelId === null ? '' : 'WHERE videos.channel_id = ?';
+  const videos = await db.getAllAsync(`
+    SELECT videos.*, channels.name AS channel_name,
+           COUNT(tasks.id) AS task_total,
+           COALESCE(SUM(tasks.is_completed), 0) AS task_completed
+    FROM videos
+    INNER JOIN channels ON videos.channel_id = channels.id
+    LEFT JOIN tasks ON tasks.video_id = videos.id
+    ${channelFilter}
+    GROUP BY videos.id
+    ORDER BY videos.created_at DESC
+  `, channelId === null ? [] : [Number(channelId)]);
+
+  return videos.map(({ task_total: rawTotal, task_completed: rawCompleted, ...video }) => {
+    const total = Number(rawTotal || 0);
+    const completed = Number(rawCompleted || 0);
+    return {
+      ...video,
+      progress: {
+        total,
+        completed,
+        percentage: total === 0 ? 0 : Math.round((completed / total) * 100),
+      },
+    };
+  });
+}
+
+export async function getVideosByChannel(channelId) {
+  const db = await getDatabase();
+
+  return await db.getAllAsync(
+    `SELECT * FROM videos WHERE channel_id = ? ORDER BY created_at DESC`,
+    [channelId]
+  );
+}
+
+export async function getVideoById(id) {
+  const db = await getDatabase();
+
+  return await db.getFirstAsync(
+    `SELECT videos.*, channels.name AS channel_name
+     FROM videos
+     INNER JOIN channels ON videos.channel_id = channels.id
+     WHERE videos.id = ?`,
+    [Number(id)]
+  );
+}
+
+export async function addVideo(video) {
+  const db = await getDatabase();
+  return insertVideo(db, video);
+}
+
+export async function createVideoFromIdea(video, taskNames, ideaId) {
+  const db = await getDatabase();
+  const cleanTaskNames = [...new Set(taskNames.map((name) => name.trim()).filter(Boolean))];
+  let createdVideoId;
+
+  await db.withTransactionAsync(async () => {
+    const sourceIdea = await db.getFirstAsync(
+      'SELECT id, converted_video_id FROM content_ideas WHERE id = ?',
+      [Number(ideaId)]
+    );
+    if (!sourceIdea) throw new Error('The source idea no longer exists.');
+    if (sourceIdea.converted_video_id) throw new Error('This idea has already been converted to a video.');
+
+    const videoId = await insertVideo(db, video);
+    for (const taskName of cleanTaskNames) {
+      await db.runAsync(
+        `INSERT INTO tasks (video_id, task_name, is_completed, is_optional)
+         VALUES (?, ?, 0, 0)`,
+        [videoId, taskName]
+      );
+    }
+
+    const result = await db.runAsync(
+      `UPDATE content_ideas
+       SET status = 'Converted', converted_video_id = ?, updated_at = ?
+       WHERE id = ? AND converted_video_id IS NULL AND status != 'Converted'`,
+      [videoId, new Date().toISOString(), Number(ideaId)]
+    );
+    if (result.changes !== 1) throw new Error('This idea has already been converted to a video.');
+    createdVideoId = videoId;
+  });
+  return createdVideoId;
+}
+
+export async function updateVideo(id, video) {
+  const db = await getDatabase();
+
+  await db.runAsync(
+    `UPDATE videos
+     SET channel_id = ?, title = ?, description = ?, thumbnail_uri = ?,
+         upload_date = ?, upload_time = ?, status = ?, priority = ?
+     WHERE id = ?`,
+    [
+      video.channel_id,
+      video.title,
+      video.description || '',
+      video.thumbnail_uri || null,
+      video.upload_date || null,
+      video.upload_time || null,
+      video.status || 'Idea',
+      video.priority || 'Medium',
+      Number(id),
+    ]
+  );
+}
+
+export async function deleteVideo(id) {
+  const db = await getDatabase();
+  await db.runAsync('DELETE FROM videos WHERE id = ?', [Number(id)]);
+}
