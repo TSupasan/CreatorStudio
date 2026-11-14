@@ -17,6 +17,7 @@ import { Ionicons } from '@expo/vector-icons';
 
 import { useTheme } from '../theme/ThemeContext';
 import GlassCard from '../components/GlassCard';
+import ThemeBackdrop from '../components/ThemeBackdrop';
 
 import {
   getAllChannels,
@@ -194,6 +195,7 @@ export default function ChannelsScreen({ navigation }) {
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
+      <ThemeBackdrop colors={colors} />
       <FlatList
         data={channels}
         keyExtractor={(item) => item.id.toString()}

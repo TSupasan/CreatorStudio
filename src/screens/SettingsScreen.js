@@ -1,6 +1,8 @@
 import React, { useCallback, useState } from 'react';
 import { ActivityIndicator, Alert, Pressable, ScrollView, StatusBar, StyleSheet, Switch, View } from 'react-native';
 import Text from '../components/ThemedText';
+import AppLogo from '../components/AppLogo';
+import ThemeBackdrop from '../components/ThemeBackdrop';
 import { useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import GlassCard from '../components/GlassCard';
@@ -96,7 +98,7 @@ export default function SettingsScreen({ navigation }) {
 
   const themeChoices = [
     { value: 'light', label: 'Light' }, { value: 'dark', label: 'Dark' }, { value: 'system', label: 'System' },
-    { value: 'theme', label: 'Theme', action: true, selected: themeName !== 'Minimal' || Boolean(customAccent) },
+    { value: 'theme', label: 'Theme', action: true, selected: themeName !== 'Minimal Studio' || Boolean(customAccent) },
   ];
   const reminderChoices = [
     { value: 15, label: '15 min' }, { value: 60, label: '1 hour' }, { value: 1440, label: '24 hours' },
@@ -106,6 +108,7 @@ export default function SettingsScreen({ navigation }) {
   ];
 
   return <View style={[styles.container, { backgroundColor: colors.background }]}>
+    <ThemeBackdrop colors={colors} />
     <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} backgroundColor={colors.background} />
     <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
       <View style={styles.header}><Pressable accessibilityRole="button" accessibilityLabel="Go back" onPress={() => navigation.goBack()} style={[styles.back, { backgroundColor: colors.surface, borderColor: colors.border }]}><Ionicons name="arrow-back" size={21} color={colors.text} /></Pressable><View style={{ flex: 1 }}><Text style={[styles.eyebrow, { color: colors.textSecondary }]}>PERSONALIZE YOUR APP</Text><Text style={[styles.title, { color: colors.text }]}>Settings</Text></View></View>
@@ -150,7 +153,7 @@ export default function SettingsScreen({ navigation }) {
 
       <Section title="About CreatorStudio" caption="APPLICATION" colors={colors} />
       <GlassCard padding={17} style={styles.card}>
-        <View style={styles.aboutHeader}><View style={[styles.aboutIcon, { backgroundColor: colors.primaryLight }]}><Ionicons name="sparkles-outline" size={22} color={colors.primaryOnLight} /></View><View><Text style={[styles.rowTitle, { color: colors.text }]}>CreatorStudio</Text><Text style={[styles.description, { color: colors.textSecondary }]}>Version {appConfig.expo?.version || 'Unavailable'}</Text></View></View>
+        <View style={styles.aboutHeader}><AppLogo width={43} /><View><Text style={[styles.rowTitle, { color: colors.text }]}>CreatorStudio</Text><Text style={[styles.description, { color: colors.textSecondary }]}>Version {appConfig.expo?.version || 'Unavailable'}</Text></View></View>
         <Text style={[styles.description, styles.aboutDescription, { color: colors.textSecondary }]}>A personal workspace to plan videos, organize channels and track your content workflow.</Text>
         <View style={[styles.offlineBadge, { backgroundColor: colors.surfaceSecondary }]}><Ionicons name="phone-portrait-outline" size={16} color={colors.success} /><Text style={[styles.description, { color: colors.textSecondary, marginTop: 0 }]}>Works offline. Your data stays on this device.</Text></View>
       </GlassCard>
@@ -163,5 +166,5 @@ const styles = StyleSheet.create({
   sectionHeading: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 11 }, sectionTitle: { fontSize: 17, fontWeight: '800' }, caption: { fontSize: 9, fontWeight: '700', letterSpacing: 1.1 }, card: { marginBottom: 22, borderRadius: 20 }, rowTitle: { fontSize: 13, fontWeight: '800' }, description: { fontSize: 11, lineHeight: 17, marginTop: 4 },
   choiceBlock: { marginBottom: 16 }, choiceLabel: { fontSize: 11, fontWeight: '700', marginBottom: 8 }, choices: { flexDirection: 'row', flexWrap: 'wrap', gap: 7 }, compactChoices: { flexWrap: 'nowrap', gap: 4 }, choice: { minHeight: 39, paddingHorizontal: 11, borderWidth: 1, borderRadius: 12, alignItems: 'center', justifyContent: 'center' }, compactChoice: { flex: 1, minWidth: 0, paddingHorizontal: 3 }, choiceText: { fontSize: 10, fontWeight: '700' }, compactChoiceText: { fontSize: 9 },
   settingRow: { flexDirection: 'row', alignItems: 'center' }, linkIcon: { width: 40, height: 40, borderRadius: 13, alignItems: 'center', justifyContent: 'center', marginRight: 11 }, linkCopy: { flex: 1, marginRight: 8 }, linkRow: { minHeight: 62, borderBottomWidth: StyleSheet.hairlineWidth, flexDirection: 'row', alignItems: 'center', gap: 10 }, lastRow: { borderBottomWidth: 0 },
-  loadingRow: { flexDirection: 'row', alignItems: 'center', gap: 10 }, storageSize: { fontSize: 23, fontWeight: '800', marginTop: 7, marginBottom: 5 }, separator: { height: StyleSheet.hairlineWidth, marginTop: 14 }, aboutHeader: { flexDirection: 'row', alignItems: 'center', gap: 12 }, aboutIcon: { width: 43, height: 43, borderRadius: 14, alignItems: 'center', justifyContent: 'center' }, aboutDescription: { marginTop: 15, marginBottom: 13 }, offlineBadge: { flexDirection: 'row', alignItems: 'center', gap: 8, borderRadius: 12, padding: 11 },
+  loadingRow: { flexDirection: 'row', alignItems: 'center', gap: 10 }, storageSize: { fontSize: 23, fontWeight: '800', marginTop: 7, marginBottom: 5 }, separator: { height: StyleSheet.hairlineWidth, marginTop: 14 }, aboutHeader: { flexDirection: 'row', alignItems: 'center', gap: 12 }, aboutDescription: { marginTop: 15, marginBottom: 13 }, offlineBadge: { flexDirection: 'row', alignItems: 'center', gap: 8, borderRadius: 12, padding: 11 },
 });

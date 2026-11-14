@@ -8,6 +8,8 @@ import {
   View,
 } from 'react-native';
 import Text from '../components/ThemedText';
+import AppLogo from '../components/AppLogo';
+import ThemeBackdrop from '../components/ThemeBackdrop';
 import { useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import GlassCard from '../components/GlassCard';
@@ -62,9 +64,11 @@ export default function WorkspaceHomeScreen({ navigation }) {
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
+      <ThemeBackdrop colors={colors} />
       <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} backgroundColor={colors.background} />
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <View style={styles.header}>
+          <AppLogo width={48} style={styles.homeLogo} />
           <View style={styles.headerCopy}>
             <Text style={[styles.welcome, { color: colors.textSecondary }]}>WELCOME BACK</Text>
             <Text style={[styles.title, { color: colors.text }]}>Your creative workspace</Text>
@@ -120,7 +124,7 @@ export default function WorkspaceHomeScreen({ navigation }) {
         <View style={[styles.shortcutList, { backgroundColor: colors.surface, borderColor: colors.border }]}>
           <Shortcut colors={colors} icon="albums-outline" title="Manage Videos" onPress={() => tabNavigation?.navigate('Video')} />
           <Shortcut colors={colors} icon="calendar-outline" title="Content Calendar" onPress={() => tabNavigation?.navigate('Calendar')} />
-          <Shortcut colors={colors} icon="stats-chart-outline" title="View Dashboard" onPress={() => navigation.navigate('Dashboard')} last />
+          <Shortcut colors={colors} icon="stats-chart-outline" title="View Analytics Dashboard" onPress={() => navigation.navigate('Dashboard')} last />
         </View>
       </ScrollView>
     </View>
@@ -131,7 +135,8 @@ const styles = StyleSheet.create({
   container: { flex: 1 },
   content: { paddingHorizontal: 20, paddingTop: 58, paddingBottom: 125 },
   header: { flexDirection: 'row', alignItems: 'center', marginBottom: 25 },
-  headerCopy: { flex: 1, paddingRight: 12 },
+  homeLogo: { marginRight: 11 },
+  headerCopy: { flex: 1, minWidth: 0, paddingRight: 12 },
   welcome: { fontSize: 9, fontWeight: '800', letterSpacing: 1.6 },
   title: { fontSize: 22, fontWeight: '800', letterSpacing: -0.5, marginTop: 5 },
   profileButton: { width: 44, height: 44, borderWidth: 1, borderRadius: 15, alignItems: 'center', justifyContent: 'center' },

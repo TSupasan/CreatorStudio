@@ -13,6 +13,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../theme/ThemeContext';
 import { useWorkspace } from '../context/WorkspaceContext';
 import GlassCard from '../components/GlassCard';
+import ThemeBackdrop from '../components/ThemeBackdrop';
 import { getDatabase } from '../database/database';
 import { getAllChannels } from '../database/repositories/channelRepository';
 import { addVideo, createVideoFromIdea, updateVideo } from '../database/repositories/videoRepository';
@@ -254,6 +255,7 @@ export default function CreateVideoScreen({ navigation, route }) {
 
   return (
     <KeyboardAvoidingView style={[styles.container, { backgroundColor: colors.background }]} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+      <ThemeBackdrop colors={colors} />
       <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} />
       <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
         <Text style={[styles.eyebrow, { color: colors.primaryText }]}>{isEditing ? 'UPDATE YOUR PROJECT' : 'BUILD YOUR NEXT IDEA'}</Text>
@@ -264,13 +266,26 @@ export default function CreateVideoScreen({ navigation, route }) {
           <Text style={[styles.sectionTitle, { color: colors.text }]}>Select Channel</Text>
           {channels.length === 0 ? (
             <TouchableOpacity onPress={() => navigation.navigate('ManageChannels')}><Text style={{ color: colors.primaryText }}>Create a channel first</Text></TouchableOpacity>
-          ) : channels.filter((channel) => isEditing || workspaceChannelId === null || channel.id === workspaceChannelId).map((channel) => (
-            <TouchableOpacity key={channel.id} onPress={() => setSelectedChannel(channel)} style={[styles.channel, { borderColor: selectedChannel?.id === channel.id ? colors.primary : colors.border, backgroundColor: selectedChannel?.id === channel.id ? colors.primaryLight : colors.surface }]}>
-              <Ionicons name="logo-youtube" color={colors.primaryText} size={18} />
-              <Text style={{ color: colors.text, flex: 1, marginLeft: 10 }}>{channel.name}</Text>
-              {selectedChannel?.id === channel.id && <Ionicons name="checkmark-circle" color={colors.primaryText} size={19} />}
-            </TouchableOpacity>
-          ))}
+          ) : channels.filter((channel) => isEditing || workspaceChannelId === null || channel.id === workspaceChannelId).map((channel) => {
+            const isSelected = selectedChannel?.id === channel.id;
+            const selectedTextColor = colors.onPrimary;
+            return (
+              <TouchableOpacity
+                key={channel.id}
+                onPress={() => setSelectedChannel(channel)}
+                accessibilityRole="button"
+                accessibilityState={{ selected: isSelected }}
+                style={[styles.channel, {
+                  borderColor: isSelected ? colors.primary : colors.border,
+                  backgroundColor: isSelected ? colors.primary : colors.surface,
+                }]}
+              >
+                <Ionicons name="logo-youtube" color={isSelected ? selectedTextColor : colors.primaryText} size={18} />
+                <Text style={{ color: isSelected ? selectedTextColor : colors.text, flex: 1, marginLeft: 10 }}>{channel.name}</Text>
+                {isSelected && <Ionicons name="checkmark-circle" color={selectedTextColor} size={19} />}
+              </TouchableOpacity>
+            );
+          })}
         </GlassCard>
 
         <GlassCard style={styles.card}>

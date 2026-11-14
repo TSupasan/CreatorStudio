@@ -4,21 +4,18 @@ import { Ionicons } from '@expo/vector-icons';
 import Text from '../components/ThemedText';
 import TextInput from '../components/ThemedTextInput';
 import GlassCard from '../components/GlassCard';
+import ThemeBackdrop from '../components/ThemeBackdrop';
 import { getThemePalette, normalizeCustomHex, visualThemeNames, defaultVisualTheme } from '../theme/colors';
 import { useTheme } from '../theme/ThemeContext';
 import { useAppPreferences } from '../context/AppPreferencesContext';
 
 const THEME_DESCRIPTIONS = {
-  Minimal: 'Clean, simple and professional',
-  Glassmorphism: 'Soft translucent surfaces',
-  'Modern Professional': 'Confident blue and slate',
-  Nature: 'Grounded greens and warm neutrals',
-  Luxury: 'Deep violet with golden accents',
-  Neon: 'Dark surfaces with vivid highlights',
-  'Soft Pastel': 'Gentle, comfortable colors',
-  Midnight: 'Deep navy and cool blue',
-  Ocean: 'Fresh blue and teal tones',
-  Sunset: 'Warm coral and amber shades',
+  Aurora: 'Electric blue and emerald light',
+  'Frosted Rose': 'Soft blush with muted rose accents',
+  'Warm Studio': 'Warm orange and calm charcoal neutrals',
+  'Ocean Glass': 'Cool blue, cyan and teal surfaces',
+  'Midnight Glass': 'Near-black navy and electric blue',
+  'Minimal Studio': 'Clean neutrals with a confident accent',
 };
 
 const TYPOGRAPHY_OPTIONS = [
@@ -139,6 +136,7 @@ export default function ThemeSelectionScreen({ navigation }) {
   const selectedAccent = ACCENT_COLORS.find((color) => color.hex === normalizedAccent) || null;
 
   return <View style={[styles.container, { backgroundColor: colors.background }]}>
+    <ThemeBackdrop colors={colors} />
     <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} backgroundColor={colors.background} />
     <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
       <View style={styles.header}>

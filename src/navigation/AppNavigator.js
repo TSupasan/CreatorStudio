@@ -16,6 +16,7 @@ import AboutCreatorStudioScreen from '../screens/AboutCreatorStudioScreen';
 import ThemeSelectionScreen from '../screens/ThemeSelectionScreen';
 import IdeaVaultScreen from '../screens/IdeaVaultScreen';
 import IdeaEditorScreen from '../screens/IdeaEditorScreen';
+import WelcomeScreen from '../screens/WelcomeScreen';
 
 import CustomTabBar from './CustomTabBar';
 
@@ -52,7 +53,13 @@ function MainTabs() {
 
 export default function AppNavigator() {
   return (
-    <Stack.Navigator screenOptions={{ headerShown: false }}>
+    <Stack.Navigator initialRouteName="Welcome" screenOptions={{ headerShown: false }}>
+      <Stack.Screen
+        name="Welcome"
+        component={WelcomeScreen}
+        options={{ animation: 'fade', animationDuration: 380 }}
+      />
+
       <Stack.Screen
         name="MainTabs"
         component={MainTabs}

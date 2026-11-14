@@ -8,6 +8,7 @@ import { useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../theme/ThemeContext';
 import GlassCard from '../components/GlassCard';
+import ThemeBackdrop from '../components/ThemeBackdrop';
 import { getVideoById, deleteVideo } from '../database/repositories/videoRepository';
 import { getTasksByVideoId, updateTaskStatus, getVideoProgress } from '../database/repositories/taskRepository';
 import { cancelVideoReminder } from '../services/notificationService';
@@ -103,6 +104,7 @@ export default function VideoDetailsScreen({ route, navigation }) {
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
+      <ThemeBackdrop colors={colors} />
       <ScrollView showsVerticalScrollIndicator={false}>
         <View style={styles.header}>
           <TouchableOpacity onPress={() => navigation.goBack()} style={[styles.back, { backgroundColor: colors.surface }]}><Ionicons name="arrow-back" size={21} color={colors.text} /></TouchableOpacity>

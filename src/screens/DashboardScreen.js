@@ -9,6 +9,8 @@ import {
   Pressable,
 } from 'react-native';
 import Text from '../components/ThemedText';
+import AppLogo from '../components/AppLogo';
+import ThemeBackdrop from '../components/ThemeBackdrop';
 import { useFocusEffect } from '@react-navigation/native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
@@ -253,12 +255,14 @@ export default function DashboardScreen({ navigation }) {
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
+      <ThemeBackdrop colors={colors} />
       <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} backgroundColor={colors.background} />
 
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
         <Animated.View style={{ opacity: fadeAnim, transform: [{ translateY: slideAnim }] }}>
           <View style={styles.topBar}>
-            <View>
+            <AppLogo width={50} style={styles.dashboardLogo} />
+            <View style={styles.topBarCopy}>
               <Text style={[styles.welcome, { color: colors.textSecondary }]}>YOUR CREATIVE SPACE</Text>
               <Text style={[styles.pageTitle, { color: colors.text }]}>Dashboard</Text>
             </View>
@@ -556,7 +560,9 @@ export default function DashboardScreen({ navigation }) {
 const styles = StyleSheet.create({
   container: { flex: 1 },
   scrollContent: { paddingHorizontal: 20, paddingTop: 58, paddingBottom: 40 },
-  topBar: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 },
+  topBar: { flexDirection: 'row', alignItems: 'center', marginBottom: 24 },
+  dashboardLogo: { marginRight: 13 },
+  topBarCopy: { flex: 1, minWidth: 0 },
   welcome: { fontSize: 10, fontWeight: '700', letterSpacing: 1.8 },
   pageTitle: { fontSize: 29, fontWeight: '800', marginTop: 5, letterSpacing: -0.8 },
   profileButton: { width: 47, height: 47, borderRadius: 16, overflow: 'hidden' },

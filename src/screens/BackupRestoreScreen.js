@@ -14,6 +14,7 @@ import * as DocumentPicker from 'expo-document-picker';
 import * as FileSystem from 'expo-file-system/legacy';
 import * as Sharing from 'expo-sharing';
 import GlassCard from '../components/GlassCard';
+import ThemeBackdrop from '../components/ThemeBackdrop';
 import { createBackup, restoreBackup, validateBackup } from '../database/backupService';
 import { useTheme } from '../theme/ThemeContext';
 
@@ -118,6 +119,7 @@ export default function BackupRestoreScreen({ navigation }) {
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
+      <ThemeBackdrop colors={colors} />
       <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} backgroundColor={colors.background} />
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <View style={styles.header}>

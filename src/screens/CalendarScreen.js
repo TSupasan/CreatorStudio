@@ -9,6 +9,8 @@ import {
   RefreshControl,
 } from 'react-native';
 import Text from '../components/ThemedText';
+import AppLogo from '../components/AppLogo';
+import ThemeBackdrop from '../components/ThemeBackdrop';
 import { useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 
@@ -181,11 +183,23 @@ export default function CalendarScreen({ navigation }) {
       fontWeight: '800',
       color: textColor,
     },
+    brandHeading: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      marginBottom: 22,
+    },
+    headerLogo: {
+      marginRight: 12,
+    },
+    headerCopy: {
+      flex: 1,
+      minWidth: 0,
+    },
     subtitle: {
       color: mutedColor,
       fontSize: 13,
       marginTop: 5,
-      marginBottom: 22,
+      marginBottom: 0,
     },
     calendarCard: {
       backgroundColor: cardBackground,
@@ -358,6 +372,7 @@ export default function CalendarScreen({ navigation }) {
 
   return (
     <View style={styles.container}>
+      <ThemeBackdrop colors={colors} />
       <StatusBar
         barStyle={isDark ? 'light-content' : 'dark-content'}
         backgroundColor={background}
@@ -375,10 +390,13 @@ export default function CalendarScreen({ navigation }) {
           />
         }
       >
-        <Text style={styles.heading}>Content Calendar</Text>
-        <Text style={styles.subtitle}>
-          Keep track of your upcoming content schedule.
-        </Text>
+        <View style={styles.brandHeading}>
+          <AppLogo width={48} style={styles.headerLogo} />
+          <View style={styles.headerCopy}>
+            <Text style={styles.heading}>Content Calendar</Text>
+            <Text style={styles.subtitle}>Keep track of your upcoming content schedule.</Text>
+          </View>
+        </View>
 
         <View style={styles.calendarCard}>
           <View style={styles.monthHeader}>

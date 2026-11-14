@@ -10,6 +10,8 @@ import {
   View,
 } from 'react-native';
 import Text from '../components/ThemedText';
+import AppLogo from '../components/AppLogo';
+import ThemeBackdrop from '../components/ThemeBackdrop';
 import TextInput from '../components/ThemedTextInput';
 import { useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
@@ -279,9 +281,7 @@ export default function IdeaVaultScreen({ navigation }) {
   const listHeader = (
     <View>
       <View style={styles.header}>
-        <Pressable accessibilityRole="button" accessibilityLabel="Go back" onPress={() => navigation.goBack()} style={[styles.backButton, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-          <Ionicons name="arrow-back" size={20} color={colors.text} />
-        </Pressable>
+        <AppLogo width={46} style={styles.headerLogo} />
         <View style={styles.headerText}>
           <Text style={[styles.eyebrow, { color: colors.primaryText }]}>YOUR CREATIVE LIBRARY</Text>
           <Text style={[styles.title, { color: colors.text }]}>Idea Vault</Text>
@@ -364,6 +364,7 @@ export default function IdeaVaultScreen({ navigation }) {
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
+      <ThemeBackdrop colors={colors} />
       <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} backgroundColor={colors.background} />
       <FlatList
         data={filteredIdeas}
@@ -444,8 +445,8 @@ const styles = StyleSheet.create({
   container: { flex: 1 },
   content: { paddingHorizontal: 20, paddingTop: 58, paddingBottom: 120, flexGrow: 1 },
   header: { flexDirection: 'row', alignItems: 'center', marginBottom: 17 },
-  backButton: { width: 41, height: 41, borderWidth: 1, borderRadius: 13, alignItems: 'center', justifyContent: 'center', marginRight: 11 },
-  headerText: { flex: 1, marginRight: 12 },
+  headerLogo: { marginRight: 12 },
+  headerText: { flex: 1, minWidth: 0, marginRight: 8 },
   eyebrow: { fontSize: 10, fontWeight: '800', letterSpacing: 1.7 },
   title: { fontSize: 29, fontWeight: '800', letterSpacing: -0.7, marginTop: 4 },
   subtitle: { fontSize: 12, lineHeight: 18, marginTop: 6 },

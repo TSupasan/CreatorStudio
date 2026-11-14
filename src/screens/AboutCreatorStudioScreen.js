@@ -1,8 +1,10 @@
 import React from 'react';
-import { Image, Pressable, ScrollView, StatusBar, StyleSheet, View } from 'react-native';
+import { Pressable, ScrollView, StatusBar, StyleSheet, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import appConfig from '../../app.json';
 import Text from '../components/ThemedText';
+import AppLogo from '../components/AppLogo';
+import ThemeBackdrop from '../components/ThemeBackdrop';
 import GlassCard from '../components/GlassCard';
 import { useTheme } from '../theme/ThemeContext';
 
@@ -36,6 +38,7 @@ export default function AboutCreatorStudioScreen({ navigation }) {
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
+      <ThemeBackdrop colors={colors} />
       <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} backgroundColor={colors.background} />
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <View style={styles.header}>
@@ -45,7 +48,7 @@ export default function AboutCreatorStudioScreen({ navigation }) {
 
         <GlassCard padding={20} style={styles.card}>
           <View style={styles.appHeader}>
-            <Image source={require('../../assets/icon.png')} style={styles.appIcon} />
+            <AppLogo width={108} />
             <View style={styles.appHeaderCopy}>
               <Text style={[styles.appName, { color: colors.text }]}>CreatorStudio</Text>
               <Text style={[styles.tagline, { color: colors.primaryText }]}>Your Personal Content Workspace</Text>
@@ -91,7 +94,7 @@ export default function AboutCreatorStudioScreen({ navigation }) {
 const styles = StyleSheet.create({
   container: { flex: 1 }, content: { paddingHorizontal: 20, paddingTop: 58, paddingBottom: 42 },
   header: { flexDirection: 'row', alignItems: 'center', marginBottom: 23 }, back: { width: 43, height: 43, borderWidth: 1, borderRadius: 14, justifyContent: 'center', alignItems: 'center', marginRight: 13 }, eyebrow: { fontSize: 9, fontWeight: '800', letterSpacing: 1.5 }, title: { fontSize: 22, fontWeight: '800', marginTop: 3 },
-  card: { marginBottom: 21 }, appHeader: { flexDirection: 'row', alignItems: 'center', gap: 15 }, appIcon: { width: 68, height: 68, borderRadius: 20 }, appHeaderCopy: { flex: 1 }, appName: { fontSize: 21, fontWeight: '900' }, tagline: { fontSize: 11, fontWeight: '700', marginTop: 4 }, version: { fontSize: 10, fontWeight: '600', marginTop: 5 },
+  card: { marginBottom: 21 }, appHeader: { flexDirection: 'row', alignItems: 'center', gap: 15 }, appHeaderCopy: { flex: 1, minWidth: 0 }, appName: { fontSize: 21, fontWeight: '900' }, tagline: { fontSize: 11, fontWeight: '700', marginTop: 4 }, version: { fontSize: 10, fontWeight: '600', marginTop: 5 },
   sectionTitle: { fontSize: 16, fontWeight: '800', marginBottom: 10 }, body: { fontSize: 12, lineHeight: 19 }, featureRow: { minHeight: 49, flexDirection: 'row', alignItems: 'center', borderBottomWidth: StyleSheet.hairlineWidth, gap: 11 }, lastRow: { borderBottomWidth: 0 }, featureIcon: { width: 32, height: 32, borderRadius: 11, alignItems: 'center', justifyContent: 'center' }, featureTitle: { flex: 1, fontSize: 11, fontWeight: '700' }, infoRow: { minHeight: 43, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12, borderBottomWidth: StyleSheet.hairlineWidth }, infoLabel: { flex: 1, fontSize: 11 }, infoValue: { fontSize: 11, fontWeight: '700', textAlign: 'right' },
   privacyHeader: { flexDirection: 'row', alignItems: 'center', gap: 10 }, privacyIcon: { width: 38, height: 38, borderRadius: 12, alignItems: 'center', justifyContent: 'center' }, privacyTitle: { flex: 1, fontSize: 12, fontWeight: '800' }, footer: { fontSize: 10, textAlign: 'center', fontWeight: '600', marginTop: 2, marginBottom: 12 },
 });

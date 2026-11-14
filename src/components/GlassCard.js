@@ -6,6 +6,7 @@ import {
   StyleSheet,
   Platform,
 } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 
 import { useTheme } from '../theme/ThemeContext';
 
@@ -22,7 +23,7 @@ export default function GlassCard({
         styles.card,
         style,
         {
-          backgroundColor: colors.glass,
+          backgroundColor: colors.card || colors.glass,
           borderColor: colors.border,
           padding,
           shadowColor: colors.shadowColor,
@@ -31,6 +32,13 @@ export default function GlassCard({
         },
       ]}
     >
+      <LinearGradient
+        pointerEvents="none"
+        colors={['rgba(255,255,255,0.075)', 'rgba(255,255,255,0.015)']}
+        start={{ x: 0.1, y: 0 }}
+        end={{ x: 0.9, y: 1 }}
+        style={[StyleSheet.absoluteFill, { borderRadius: colors.cardRadius }]}
+      />
       {children}
     </View>
   );
@@ -40,8 +48,6 @@ const styles = StyleSheet.create({
   card: {
     borderRadius: 22,
     borderWidth: 1,
-    overflow: 'hidden',
-
     ...Platform.select({
       ios: {
         shadowOpacity: 0.08,

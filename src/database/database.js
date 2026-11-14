@@ -1,12 +1,13 @@
 ﻿import * as SQLite from 'expo-sqlite';
 
 let db;
+let databaseInitialization;
 
-export async function getDatabase() {
-  if (!db) {
-    db = await SQLite.openDatabaseAsync('creatorstudio.db');
+async function openAndInitializeDatabase() {
+  const openedDb = await SQLite.openDatabaseAsync('creatorstudio.db');
 
-    await db.execAsync(`
+  try {
+    await openedDb.execAsync(`
       PRAGMA foreign_keys = ON;
 
       CREATE TABLE IF NOT EXISTS channels (
@@ -89,30 +90,55 @@ export async function getDatabase() {
       'Entertainment',
     ];
     for (const category of defaultIdeaCategories) {
-      await db.runAsync(
+      await openedDb.runAsync(
         'INSERT OR IGNORE INTO idea_categories (name, is_default) VALUES (?, 1)',
         [category]
       );
     }
 
     // Safe migration for databases created by earlier app versions.
-    const columns = await db.getAllAsync('PRAGMA table_info(videos)');
+    const columns = await openedDb.getAllAsync('PRAGMA table_info(videos)');
     const hasUploadTime = columns.some((column) => column.name === 'upload_time');
 
     if (!hasUploadTime) {
-      await db.execAsync('ALTER TABLE videos ADD COLUMN upload_time TEXT');
+      await openedDb.execAsync('ALTER TABLE videos ADD COLUMN upload_time TEXT');
     }
 
-    const ideaColumns = await db.getAllAsync('PRAGMA table_info(content_ideas)');
+    const ideaColumns = await openedDb.getAllAsync('PRAGMA table_info(content_ideas)');
     const hasIdeaChannel = ideaColumns.some((column) => column.name === 'channel_id');
     if (!hasIdeaChannel) {
-      await db.execAsync(
+      await openedDb.execAsync(
         'ALTER TABLE content_ideas ADD COLUMN channel_id INTEGER REFERENCES channels(id) ON DELETE SET NULL'
       );
     }
 
-    await db.execAsync('CREATE INDEX IF NOT EXISTS content_ideas_channel_idx ON content_ideas(channel_id)');
+    await openedDb.execAsync('CREATE INDEX IF NOT EXISTS content_ideas_channel_idx ON content_ideas(channel_id)');
+
+    return openedDb;
+  } catch (error) {
+    try {
+      await openedDb.closeAsync();
+    } catch (closeError) {
+      console.warn('Could not close the failed database initialization connection:', closeError);
+    }
+    throw error;
+  }
+}
+
+export async function getDatabase() {
+  if (db) return db;
+
+  if (!databaseInitialization) {
+    databaseInitialization = openAndInitializeDatabase()
+      .then((openedDb) => {
+        db = openedDb;
+        return openedDb;
+      })
+      .catch((error) => {
+        databaseInitialization = null;
+        throw error;
+      });
   }
 
-  return db;
+  return databaseInitialization;
 }

@@ -1,130 +1,56 @@
-
-export const lightColors = {
-  background: '#F5F6FA',
-  surface: '#FFFFFF',
-  surfaceSecondary: '#EEF0F6',
-
-  primary: '#7057F5',
-  primaryLight: '#EAE5FF',
-  secondary: '#18B8A4',
-
-  text: '#171827',
-  textSecondary: '#777B8D',
-  textMuted: '#A2A5B3',
-
-  border: '#E7E8EF',
-  glass: 'rgba(255, 255, 255, 0.72)',
-
-  success: '#20A879',
-  warning: '#F0A33A',
-  danger: '#E85D75',
-
-  tabBar: 'rgba(255, 255, 255, 0.88)',
-  overlay: 'rgba(20, 20, 40, 0.08)',
-};
-
-export const darkColors = {
-  background: '#10111B',
-  surface: '#1B1D2B',
-  surfaceSecondary: '#25283A',
-
-  primary: '#9B87FF',
-  primaryLight: '#302957',
-  secondary: '#38D9C5',
-
-  text: '#F5F5FC',
-  textSecondary: '#B1B3C4',
-  textMuted: '#777B91',
-
-  border: '#303246',
-  glass: 'rgba(35, 37, 55, 0.78)',
-
-  success: '#43D6A0',
-  warning: '#FFC16B',
-  danger: '#FF718A',
-
-  tabBar: 'rgba(27, 29, 43, 0.90)',
-  overlay: 'rgba(0, 0, 0, 0.30)',
-};
-
-const makePalette = (values, effects = {}) => {
-  const onPrimary = values.onPrimary || getContrastText(values.primary);
-  return {
-    ...values,
-    onPrimary,
-    primaryText: values.primaryText || ensureAccessibleAccent(values.primary, values.surface),
-    primaryOnLight: values.primaryOnLight || getContrastText(values.primaryLight),
-    success: values.success || '#16825D',
-    warning: values.warning || '#A45D00',
-    danger: values.danger || '#B4233B',
-    statusIdea: values.statusIdea || values.textMuted,
-    statusPlanning: values.statusPlanning || values.warning || '#C47A1A',
-    statusEditing: values.statusEditing || '#3975C6',
-    statusReady: values.statusReady || values.primary,
-    statusPublished: values.statusPublished || values.success || '#16825D',
-    priorityLow: values.priorityLow || values.success || '#16825D',
-    priorityMedium: values.priorityMedium || values.warning || '#C47A1A',
-    priorityHigh: values.priorityHigh || values.danger || '#C43F54',
-    heroGradient: values.heroGradient || [values.primary, values.secondary, values.primary],
-    heroText: values.heroText || onPrimary,
-    heroMuted: values.heroMuted || onPrimary,
-    heroDecoration: values.heroDecoration || 'rgba(255,255,255,0.10)',
-    heroIconBackground: values.heroIconBackground || 'rgba(255,255,255,0.18)',
-    modalOverlay: values.modalOverlay || 'rgba(0, 0, 0, 0.46)',
-    cardRadius: values.cardRadius || 22,
-    buttonRadius: values.buttonRadius || effects.buttonRadius || Math.max(10, (effects.cardRadius || 22) - 8),
-    cardElevation: values.cardElevation || 3,
-    shadowColor: values.shadowColor || '#000000',
-    blurIntensity: values.blurIntensity || 65,
-    ...effects,
-  };
-};
-
-const palettes = {
-  Minimal: {
-    light: makePalette(lightColors, { cardRadius: 22, cardElevation: 3, shadowColor: '#7770B8', blurIntensity: 75 }),
-    dark: makePalette(darkColors, { cardRadius: 22, cardElevation: 3, shadowColor: '#000000', blurIntensity: 55 }),
+const THEME_DEFINITIONS = {
+  Aurora: {
+    description: 'Electric blue and emerald light on deep, cinematic surfaces.',
+    light: { background: '#EDF7F5', backgroundSecondary: '#DDEDEA', surface: '#F9FFFD', surfaceElevated: '#FFFFFF', card: 'rgba(255,255,255,0.86)', text: '#102622', textSecondary: '#4D6B65', textMuted: '#738E88', accent: '#087F79', accentSecondary: '#176FA8', border: '#C9DFDA', divider: '#DCE9E6', success: '#16825D', warning: '#A45D00', error: '#B4233B', inputBackground: '#F3FAF8', tabBarBackground: 'rgba(249,255,253,0.90)' },
+    dark: { background: '#071311', backgroundSecondary: '#0C1E1B', surface: '#112522', surfaceElevated: '#18332F', card: 'rgba(17,37,34,0.94)', text: '#E9FFF8', textSecondary: '#A9CEC2', textMuted: '#779D92', accent: '#49E5C3', accentSecondary: '#68BDF4', border: '#244B43', divider: '#1D3933', success: '#65EFAE', warning: '#FFD166', error: '#FF7892', inputBackground: '#0C1C19', tabBarBackground: 'rgba(12,29,26,0.94)' },
   },
-  Glassmorphism: {
-    light: makePalette({ ...lightColors, background: '#EEF2F8', surface: '#FFFFFF', surfaceSecondary: '#E7ECF5', primary: '#5A5DD8', primaryLight: '#E4E5FF', secondary: '#2BAFAD', glass: 'rgba(255, 255, 255, 0.68)', tabBar: 'rgba(255, 255, 255, 0.72)', border: '#DDE4F0', overlay: 'rgba(39, 47, 83, 0.12)' }, { cardRadius: 26, cardElevation: 5, shadowColor: '#727BB3', blurIntensity: 82 }),
-    dark: makePalette({ ...darkColors, background: '#171A2B', surface: '#252A40', surfaceSecondary: '#303650', primary: '#A8A5FF', primaryLight: '#39385F', secondary: '#67D8CF', glass: 'rgba(44, 49, 75, 0.72)', tabBar: 'rgba(38, 43, 65, 0.76)', border: '#454B6B', overlay: 'rgba(0, 0, 0, 0.38)' }, { cardRadius: 26, cardElevation: 4, shadowColor: '#050611', blurIntensity: 62 }),
+  'Frosted Rose': {
+    description: 'Soft rose accents, pale blush surfaces and gentle contrast.',
+    light: { background: '#FBF3F6', backgroundSecondary: '#F4E8ED', surface: '#FFFBFD', surfaceElevated: '#FFFFFF', card: 'rgba(255,251,253,0.90)', text: '#35252E', textSecondary: '#765E6A', textMuted: '#9D8792', accent: '#A94F77', accentSecondary: '#C47A91', border: '#E9D8E0', divider: '#F0E3E9', success: '#277A59', warning: '#A45D00', error: '#B4233B', inputBackground: '#FFF8FA', tabBarBackground: 'rgba(255,251,253,0.92)' },
+    dark: { background: '#1A1419', backgroundSecondary: '#241B22', surface: '#2A2028', surfaceElevated: '#362832', card: 'rgba(42,32,40,0.94)', text: '#FFF5F9', textSecondary: '#D1B9C5', textMuted: '#A58C99', accent: '#E7A0BE', accentSecondary: '#F0B3A3', border: '#513B49', divider: '#3C2C37', success: '#70D6A4', warning: '#F0C16C', error: '#FF879B', inputBackground: '#211820', tabBarBackground: 'rgba(35,26,33,0.95)' },
   },
-  'Modern Professional': {
-    light: makePalette({ ...lightColors, background: '#F3F6FA', surface: '#FFFFFF', surfaceSecondary: '#E9EFF7', primary: '#1769AA', primaryLight: '#DCEEFF', secondary: '#247F85', text: '#15263A', textSecondary: '#526579', textMuted: '#77889A', border: '#D9E2EC', glass: '#FFFFFF', tabBar: '#FFFFFF', overlay: 'rgba(17, 42, 66, 0.12)' }, { cardRadius: 15, cardElevation: 2, shadowColor: '#476781', blurIntensity: 72 }),
-    dark: makePalette({ ...darkColors, background: '#111B27', surface: '#1B2A3A', surfaceSecondary: '#25384C', primary: '#62B7F0', primaryLight: '#254967', secondary: '#54C8BB', text: '#EFF6FC', textSecondary: '#B0C2D2', textMuted: '#8197AA', border: '#31475B', glass: '#1B2A3A', tabBar: '#1B2A3A', overlay: 'rgba(2, 11, 20, 0.42)' }, { cardRadius: 15, cardElevation: 2, shadowColor: '#020A11', blurIntensity: 55 }),
+  'Warm Studio': {
+    description: 'Warm orange details with calm stone and charcoal neutrals.',
+    light: { background: '#F7F3EE', backgroundSecondary: '#EEE7DE', surface: '#FFFCF8', surfaceElevated: '#FFFFFF', card: 'rgba(255,252,248,0.90)', text: '#302821', textSecondary: '#6F6255', textMuted: '#958779', accent: '#B85F25', accentSecondary: '#7E766B', border: '#E3D8CB', divider: '#EEE5DB', success: '#327A58', warning: '#A45D00', error: '#B4233B', inputBackground: '#FAF6F1', tabBarBackground: 'rgba(255,252,248,0.93)' },
+    dark: { background: '#171614', backgroundSecondary: '#211F1B', surface: '#292621', surfaceElevated: '#35312A', card: 'rgba(41,38,33,0.94)', text: '#F8F3EA', textSecondary: '#C9BDAE', textMuted: '#9D9082', accent: '#F1A36A', accentSecondary: '#B7A58E', border: '#4C4439', divider: '#39342D', success: '#78D6A0', warning: '#F4C56E', error: '#FF8791', inputBackground: '#201E1A', tabBarBackground: 'rgba(32,30,26,0.95)' },
   },
-  Nature: {
-    light: makePalette({ ...lightColors, background: '#F2F7F0', surface: '#FCFFFA', surfaceSecondary: '#E6F0E2', primary: '#34764C', primaryLight: '#DCEEDD', secondary: '#8A9F43', text: '#203127', textSecondary: '#5D7163', textMuted: '#829187', border: '#D6E4D4', glass: '#FCFFFA', tabBar: '#F8FFF7', overlay: 'rgba(24, 52, 31, 0.12)' }, { cardRadius: 21, cardElevation: 2, shadowColor: '#54745B', blurIntensity: 70 }),
-    dark: makePalette({ ...darkColors, background: '#121D17', surface: '#1E2D23', surfaceSecondary: '#2A3B30', primary: '#86C68F', primaryLight: '#2E5037', secondary: '#C4C879', text: '#EFF8EF', textSecondary: '#B7CABA', textMuted: '#849B88', border: '#3B5141', glass: '#1E2D23', tabBar: '#1B2A20', overlay: 'rgba(0, 0, 0, 0.40)' }, { cardRadius: 21, cardElevation: 2, shadowColor: '#050C07', blurIntensity: 52 }),
+  'Ocean Glass': {
+    description: 'Cool blue, cyan and teal tones with clear, airy surfaces.',
+    light: { background: '#EFF7FA', backgroundSecondary: '#E0EFF4', surface: '#FBFEFF', surfaceElevated: '#FFFFFF', card: 'rgba(251,254,255,0.88)', text: '#18313B', textSecondary: '#55717A', textMuted: '#8199A1', accent: '#147A9C', accentSecondary: '#13A69B', border: '#D2E4E9', divider: '#E2EEF1', success: '#16825D', warning: '#A45D00', error: '#B4233B', inputBackground: '#F5FBFD', tabBarBackground: 'rgba(251,254,255,0.92)' },
+    dark: { background: '#0B1920', backgroundSecondary: '#10252E', surface: '#142A34', surfaceElevated: '#1D3944', card: 'rgba(20,42,52,0.94)', text: '#EEFBFF', textSecondary: '#B2CDD5', textMuted: '#7F9EA7', accent: '#64D2ED', accentSecondary: '#5BE0C6', border: '#2B4C58', divider: '#203B45', success: '#69DDA5', warning: '#FFD166', error: '#FF8297', inputBackground: '#10232B', tabBarBackground: 'rgba(16,37,45,0.95)' },
   },
-  Luxury: {
-    light: makePalette({ ...lightColors, background: '#F6F2F8', surface: '#FFFCF8', surfaceSecondary: '#EFE7F0', primary: '#70429A', primaryLight: '#EDE1F5', secondary: '#B88B3D', text: '#2B1E34', textSecondary: '#75677B', textMuted: '#A195A5', border: '#E5D9E8', glass: '#FFFCF8', tabBar: '#FFFDF9', overlay: 'rgba(39, 22, 51, 0.14)' }, { cardRadius: 19, cardElevation: 4, shadowColor: '#71527F', blurIntensity: 74 }),
-    dark: makePalette({ ...darkColors, background: '#17121D', surface: '#261E2E', surfaceSecondary: '#352A3C', primary: '#D0A9F4', primaryLight: '#443052', secondary: '#E0BD70', text: '#FBF6FF', textSecondary: '#CCBFD3', textMuted: '#97899D', border: '#4A3A51', glass: '#261E2E', tabBar: '#241B2B', overlay: 'rgba(0, 0, 0, 0.44)' }, { cardRadius: 19, cardElevation: 3, shadowColor: '#050207', blurIntensity: 55 }),
+  'Midnight Glass': {
+    description: 'Near-black navy with crisp electric blue highlights.',
+    light: { background: '#F0F3F9', backgroundSecondary: '#E2E8F2', surface: '#FCFDFF', surfaceElevated: '#FFFFFF', card: 'rgba(252,253,255,0.90)', text: '#1A263A', textSecondary: '#58677E', textMuted: '#8390A5', accent: '#365AA0', accentSecondary: '#477FAE', border: '#D7DFEA', divider: '#E5EAF1', success: '#287A5A', warning: '#A45D00', error: '#B4233B', inputBackground: '#F7F9FC', tabBarBackground: 'rgba(252,253,255,0.92)' },
+    dark: { background: '#090E1B', backgroundSecondary: '#10182A', surface: '#141E33', surfaceElevated: '#1C2B46', card: 'rgba(20,30,51,0.95)', text: '#F2F5FF', textSecondary: '#B3C0DD', textMuted: '#7E8DAF', accent: '#83A8FF', accentSecondary: '#54C7E8', border: '#2A3A5B', divider: '#1E2C45', success: '#69DDA5', warning: '#FFD166', error: '#FF8297', inputBackground: '#10192A', tabBarBackground: 'rgba(14,22,39,0.96)' },
   },
-  Neon: {
-    light: makePalette({ ...lightColors, background: '#F1F7F7', surface: '#FFFFFF', surfaceSecondary: '#E3F1F0', primary: '#087F79', primaryLight: '#CFF5EF', secondary: '#6153D8', text: '#10272A', textSecondary: '#4F6A6A', textMuted: '#7D9694', border: '#CDE1DF', glass: '#FFFFFF', tabBar: '#F8FFFF', overlay: 'rgba(6, 44, 44, 0.14)', success: '#087E58', warning: '#A35A00', danger: '#B52B59' }, { cardRadius: 14, cardElevation: 1, shadowColor: '#2D7773', blurIntensity: 68 }),
-    dark: makePalette({ ...darkColors, background: '#080D13', surface: '#111B24', surfaceSecondary: '#1A2832', primary: '#49F2D1', primaryLight: '#153F3B', secondary: '#B5FF4D', text: '#E9FFF9', textSecondary: '#A5C8C1', textMuted: '#70958F', border: '#24443F', glass: '#111B24', tabBar: '#0D171E', overlay: 'rgba(0, 0, 0, 0.55)', success: '#65EFAE', warning: '#FFD166', danger: '#FF6F91' }, { cardRadius: 14, cardElevation: 4, shadowColor: '#00DAB8', blurIntensity: 45 }),
-  },
-  'Soft Pastel': {
-    light: makePalette({ ...lightColors, background: '#FAF5F8', surface: '#FFFCFD', surfaceSecondary: '#F2EAF1', primary: '#906AA7', primaryLight: '#F0E3F5', secondary: '#5F9D9A', text: '#352B3A', textSecondary: '#756A7B', textMuted: '#A095A4', border: '#E9DDE8', glass: '#FFFCFD', tabBar: '#FFFBFE', overlay: 'rgba(70, 46, 77, 0.11)' }, { cardRadius: 25, cardElevation: 2, shadowColor: '#A38AA1', blurIntensity: 76 }),
-    dark: makePalette({ ...darkColors, background: '#1B1720', surface: '#29232F', surfaceSecondary: '#39313F', primary: '#D5B3E6', primaryLight: '#493951', secondary: '#9BD6CE', text: '#FBF5FC', textSecondary: '#CCBFCE', textMuted: '#95889A', border: '#4B3E4D', glass: '#29232F', tabBar: '#28222E', overlay: 'rgba(0, 0, 0, 0.42)' }, { cardRadius: 25, cardElevation: 2, shadowColor: '#09060A', blurIntensity: 55 }),
-  },
-  Midnight: {
-    light: makePalette({ ...lightColors, background: '#EDF1F8', surface: '#FFFFFF', surfaceSecondary: '#E1E8F3', primary: '#324E83', primaryLight: '#DDE7FA', secondary: '#5A7FA6', text: '#1A263D', textSecondary: '#586781', textMuted: '#8390A4', border: '#D5DFED', glass: '#FFFFFF', tabBar: '#F6F8FC', overlay: 'rgba(14, 27, 51, 0.15)' }, { cardRadius: 18, cardElevation: 3, shadowColor: '#556987', blurIntensity: 72 }),
-    dark: makePalette({ ...darkColors, background: '#090F20', surface: '#111B32', surfaceSecondary: '#1A2842', primary: '#90ACFF', primaryLight: '#27395E', secondary: '#62C9D3', text: '#F3F6FF', textSecondary: '#AEBBD5', textMuted: '#7786A5', border: '#2A3A58', glass: '#111B32', tabBar: '#101A30', overlay: 'rgba(0, 0, 0, 0.52)' }, { cardRadius: 18, cardElevation: 3, shadowColor: '#02050B', blurIntensity: 48 }),
-  },
-  Ocean: {
-    light: makePalette({ ...lightColors, background: '#EFF7FA', surface: '#FAFEFF', surfaceSecondary: '#E0F0F5', primary: '#137CA3', primaryLight: '#D6F1FA', secondary: '#16A79B', text: '#15313C', textSecondary: '#53717D', textMuted: '#8199A1', border: '#D3E6EC', glass: '#FAFEFF', tabBar: '#F5FCFE', overlay: 'rgba(11, 54, 72, 0.12)' }, { cardRadius: 20, cardElevation: 2, shadowColor: '#4C8795', blurIntensity: 76 }),
-    dark: makePalette({ ...darkColors, background: '#0D1B23', surface: '#142832', surfaceSecondary: '#1E3842', primary: '#60CAE9', primaryLight: '#1D4653', secondary: '#57D7BE', text: '#EDFAFF', textSecondary: '#B2CED6', textMuted: '#7D9EA8', border: '#2A4A55', glass: '#142832', tabBar: '#132731', overlay: 'rgba(0, 0, 0, 0.44)' }, { cardRadius: 20, cardElevation: 2, shadowColor: '#020B0F', blurIntensity: 52 }),
-  },
-  Sunset: {
-    light: makePalette({ ...lightColors, background: '#FFF5F0', surface: '#FFFCFA', surfaceSecondary: '#F9E7DF', primary: '#C95145', primaryLight: '#FBE1DA', secondary: '#E28A38', text: '#3B2526', textSecondary: '#806160', textMuted: '#AA8D8A', border: '#EED8D2', glass: '#FFFCFA', tabBar: '#FFFAF7', overlay: 'rgba(69, 32, 28, 0.12)' }, { cardRadius: 23, cardElevation: 3, shadowColor: '#A56D61', blurIntensity: 78 }),
-    dark: makePalette({ ...darkColors, background: '#1D1317', surface: '#2C1E22', surfaceSecondary: '#3B292E', primary: '#FF9A7D', primaryLight: '#573239', secondary: '#FFC269', text: '#FFF4EF', textSecondary: '#D5B9B0', textMuted: '#A88A84', border: '#51383A', glass: '#2C1E22', tabBar: '#291B20', overlay: 'rgba(0, 0, 0, 0.45)' }, { cardRadius: 23, cardElevation: 3, shadowColor: '#090405', blurIntensity: 55 }),
+  'Minimal Studio': {
+    description: 'A restrained neutral palette with a confident blue accent.',
+    light: { background: '#F4F5F7', backgroundSecondary: '#E9EBEF', surface: '#FFFFFF', surfaceElevated: '#FFFFFF', card: 'rgba(255,255,255,0.92)', text: '#20242B', textSecondary: '#5F6874', textMuted: '#89919A', accent: '#3659A8', accentSecondary: '#59768E', border: '#DDE1E6', divider: '#EAEDF0', success: '#287A5A', warning: '#A45D00', error: '#B4233B', inputBackground: '#F8F9FA', tabBarBackground: 'rgba(255,255,255,0.94)' },
+    dark: { background: '#111317', backgroundSecondary: '#191C22', surface: '#20242B', surfaceElevated: '#292E37', card: 'rgba(32,36,43,0.95)', text: '#F4F5F7', textSecondary: '#BEC3CA', textMuted: '#858D98', accent: '#8AABF2', accentSecondary: '#77B7C8', border: '#373D47', divider: '#2B3039', success: '#69DDA5', warning: '#FFD166', error: '#FF8297', inputBackground: '#191C22', tabBarBackground: 'rgba(26,29,35,0.96)' },
   },
 };
 
-export const visualThemeNames = Object.keys(palettes);
-export const defaultVisualTheme = 'Minimal';
+export const visualThemeNames = Object.keys(THEME_DEFINITIONS);
+export const defaultVisualTheme = 'Minimal Studio';
+
+const legacyThemeMap = {
+  Minimal: 'Minimal Studio',
+  Glassmorphism: 'Frosted Rose',
+  'Modern Professional': 'Minimal Studio',
+  Nature: 'Aurora',
+  Luxury: 'Frosted Rose',
+  Neon: 'Aurora',
+  'Soft Pastel': 'Frosted Rose',
+  Midnight: 'Midnight Glass',
+  Ocean: 'Ocean Glass',
+  Sunset: 'Warm Studio',
+};
+
+export function normalizeVisualThemeName(value) {
+  if (visualThemeNames.includes(value)) return value;
+  return legacyThemeMap[value] || defaultVisualTheme;
+}
 
 function normalizeHex(value) {
   if (typeof value !== 'string') return null;
@@ -134,25 +60,24 @@ function normalizeHex(value) {
   return null;
 }
 
-function blendHex(hex, target, ratio) {
-  const sourceRgb = [1, 3, 5].map((index) => parseInt(hex.slice(index, index + 2), 16));
-  const targetRgb = [1, 3, 5].map((index) => parseInt(target.slice(index, index + 2), 16));
-  return `#${sourceRgb.map((channel, index) => Math.round(channel * (1 - ratio) + targetRgb[index] * ratio).toString(16).padStart(2, '0')).join('').toUpperCase()}`;
-}
-
-function getContrastText(hex) {
-  const luminance = getLuminance(hex);
-  return luminance > 0.179 ? '#17202A' : '#FFFFFF';
-}
-
 function getLuminance(hex) {
   const rgb = [1, 3, 5].map((index) => parseInt(hex.slice(index, index + 2), 16) / 255).map((channel) => channel <= 0.03928 ? channel / 12.92 : ((channel + 0.055) / 1.055) ** 2.4);
   return 0.2126 * rgb[0] + 0.7152 * rgb[1] + 0.0722 * rgb[2];
 }
 
+function getContrastText(hex) {
+  return getLuminance(hex) > 0.179 ? '#17202A' : '#FFFFFF';
+}
+
 function contrastRatio(first, second) {
   const [lighter, darker] = [getLuminance(first), getLuminance(second)].sort((a, b) => b - a);
   return (lighter + 0.05) / (darker + 0.05);
+}
+
+function blendHex(hex, target, ratio) {
+  const sourceRgb = [1, 3, 5].map((index) => parseInt(hex.slice(index, index + 2), 16));
+  const targetRgb = [1, 3, 5].map((index) => parseInt(target.slice(index, index + 2), 16));
+  return `#${sourceRgb.map((channel, index) => Math.round(channel * (1 - ratio) + targetRgb[index] * ratio).toString(16).padStart(2, '0')).join('').toUpperCase()}`;
 }
 
 function ensureAccessibleAccent(accent, surface) {
@@ -165,24 +90,68 @@ function ensureAccessibleAccent(accent, surface) {
   return getContrastText(surface);
 }
 
+function createCompatibilityPalette(theme, mode) {
+  const base = THEME_DEFINITIONS[normalizeVisualThemeName(theme)][mode === 'dark' ? 'dark' : 'light'];
+  const primaryLight = blendHex(base.accent, mode === 'dark' ? '#FFFFFF' : '#FFFFFF', mode === 'dark' ? 0.78 : 0.88);
+  const onPrimary = getContrastText(base.accent);
+  return {
+    ...base,
+    primary: base.accent,
+    secondary: base.accentSecondary,
+    danger: base.error,
+    glass: base.card,
+    tabBar: base.tabBarBackground,
+    surfaceSecondary: base.backgroundSecondary,
+    primaryLight,
+    primaryText: ensureAccessibleAccent(base.accent, base.surface),
+    primaryOnLight: getContrastText(primaryLight),
+    onPrimary,
+    statusIdea: base.textMuted,
+    statusPlanning: base.warning,
+    statusEditing: mode === 'dark' ? '#6CA8E8' : '#3975C6',
+    statusReady: base.accent,
+    statusPublished: base.success,
+    priorityLow: base.success,
+    priorityMedium: base.warning,
+    priorityHigh: base.error,
+    heroGradient: [blendHex(base.accent, '#000000', 0.12), base.accent, blendHex(base.accent, '#FFFFFF', 0.16)],
+    heroText: onPrimary,
+    heroMuted: onPrimary,
+    heroDecoration: `${onPrimary}18`,
+    heroIconBackground: `${onPrimary}24`,
+    modalOverlay: mode === 'dark' ? 'rgba(0,0,0,0.58)' : 'rgba(23,32,42,0.34)',
+    cardRadius: 22,
+    buttonRadius: 15,
+    cardElevation: mode === 'dark' ? 3 : 2,
+    shadowColor: mode === 'dark' ? '#000000' : base.accent,
+    blurIntensity: mode === 'dark' ? 52 : 68,
+  };
+}
+
 export function getThemePalette(themeName = defaultVisualTheme, mode = 'light', customAccent = null) {
-  const source = palettes[themeName] || palettes[defaultVisualTheme];
-  const palette = { ...source[mode === 'dark' ? 'dark' : 'light'] };
+  const palette = createCompatibilityPalette(themeName, mode);
   const accent = normalizeHex(customAccent);
-  if (accent) {
-    palette.primary = accent;
-    palette.primaryText = ensureAccessibleAccent(accent, palette.surface);
-    palette.onPrimary = getContrastText(accent);
-    palette.primaryLight = blendHex(accent, mode === 'dark' ? '#FFFFFF' : '#FFFFFF', mode === 'dark' ? 0.78 : 0.88);
-    palette.primaryOnLight = getContrastText(palette.primaryLight);
-    palette.secondary = blendHex(accent, '#00A99D', 0.35);
-    palette.heroGradient = [blendHex(accent, '#000000', 0.12), accent, blendHex(accent, '#FFFFFF', 0.16)];
-    palette.heroText = palette.onPrimary;
-    palette.heroMuted = palette.onPrimary;
-    palette.heroDecoration = `${palette.onPrimary}18`;
-    palette.heroIconBackground = `${palette.onPrimary}24`;
-  }
-  return palette;
+  if (!accent) return palette;
+
+  const primaryLight = blendHex(accent, '#FFFFFF', mode === 'dark' ? 0.78 : 0.88);
+  const onPrimary = getContrastText(accent);
+  const accessibleAccent = ensureAccessibleAccent(accent, palette.surface);
+  return {
+    ...palette,
+    accent,
+    primary: accent,
+    primaryText: accessibleAccent,
+    onPrimary,
+    primaryLight,
+    primaryOnLight: getContrastText(primaryLight),
+    accentSecondary: blendHex(accent, palette.accentSecondary, 0.45),
+    secondary: blendHex(accent, palette.accentSecondary, 0.45),
+    heroGradient: [blendHex(accent, '#000000', 0.12), accent, blendHex(accent, '#FFFFFF', 0.16)],
+    heroText: onPrimary,
+    heroMuted: onPrimary,
+    heroDecoration: `${onPrimary}18`,
+    heroIconBackground: `${onPrimary}24`,
+  };
 }
 
 export function normalizeCustomHex(value) {

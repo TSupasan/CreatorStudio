@@ -4,6 +4,8 @@ import {
   StatusBar, Image,
 } from 'react-native';
 import Text from '../components/ThemedText';
+import AppLogo from '../components/AppLogo';
+import ThemeBackdrop from '../components/ThemeBackdrop';
 import TextInput from '../components/ThemedTextInput';
 import { useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
@@ -157,6 +159,7 @@ export default function VideosScreen({ navigation }) {
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
+      <ThemeBackdrop colors={colors} />
       <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} />
       <FlatList
         data={filteredVideos}
@@ -166,8 +169,13 @@ export default function VideosScreen({ navigation }) {
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
         ListHeaderComponent={<>
-          <Text style={[styles.eyebrow, { color: colors.primaryText }]}>YOUR CREATIVE LIBRARY</Text>
-          <Text style={[styles.heading, { color: colors.text }]}>My Videos</Text>
+          <View style={styles.brandHeading}>
+            <AppLogo width={48} style={styles.headerLogo} />
+            <View style={styles.headerCopy}>
+              <Text style={[styles.eyebrow, { color: colors.primaryText }]}>YOUR CREATIVE LIBRARY</Text>
+              <Text style={[styles.heading, { color: colors.text }]}>My Videos</Text>
+            </View>
+          </View>
           <Text style={[styles.subtitle, { color: colors.textSecondary }]}>Manage your video projects.</Text>
           <View style={[styles.search, { backgroundColor: colors.surface, borderColor: colors.border }]}>
             <Ionicons name="search-outline" size={19} color={colors.textMuted} />
@@ -293,6 +301,9 @@ export default function VideosScreen({ navigation }) {
 const styles = StyleSheet.create({
   container: { flex: 1 },
   content: { paddingHorizontal: 20, paddingTop: 60, paddingBottom: 130 },
+  brandHeading: { flexDirection: 'row', alignItems: 'center', marginBottom: 7 },
+  headerLogo: { marginRight: 12 },
+  headerCopy: { flex: 1, minWidth: 0 },
   eyebrow: { fontSize: 11, fontWeight: '800', letterSpacing: 2, marginBottom: 10 },
   heading: { fontSize: 30, fontWeight: '800' },
   subtitle: { fontSize: 13, marginTop: 6, marginBottom: 18 },
