@@ -36,8 +36,6 @@ export default function VideosScreen({ navigation }) {
   const [videos, setVideos] = useState([]);
   const [search, setSearch] = useState('');
   const [selectedFilter, setSelectedFilter] = useState('All');
-  const [channelFilter, setChannelFilter] = useState({ workspaceId: null, id: 'All' });
-  const selectedChannel = channelFilter.workspaceId === workspaceChannelId ? channelFilter.id : 'All';
   const [selectedPriority, setSelectedPriority] = useState('All');
   const [loading, setLoading] = useState(true);
 
@@ -55,28 +53,6 @@ export default function VideosScreen({ navigation }) {
 
   useFocusEffect(useCallback(() => { loadVideos(); }, [loadVideos]));
 
-  const channelOptions = useMemo(() => {
-    const uniqueChannels = new Map();
-
-    videos.forEach((video) => {
-      const id = String(video.channel_id ?? video.channel_name ?? 'unknown');
-
-      if (!uniqueChannels.has(id)) {
-        uniqueChannels.set(id, {
-          id,
-          name: video.channel_name || 'Unknown channel',
-        });
-      }
-    });
-
-    return [
-      { id: 'All', name: 'All Channels' },
-      ...Array.from(uniqueChannels.values()).sort((a, b) =>
-        a.name.localeCompare(b.name)
-      ),
-    ];
-  }, [videos]);
-
   const priorityOptions = ['All', 'High', 'Medium', 'Low'];
 
   const filteredVideos = useMemo(() => videos.filter((video) => {
@@ -89,17 +65,11 @@ export default function VideosScreen({ navigation }) {
     const matchesStatus =
       selectedFilter === 'All' || video.status === selectedFilter;
 
-    const channelId = String(
-      video.channel_id ?? video.channel_name ?? 'unknown'
-    );
-
-    const matchesChannel = selectedChannel === 'All' || channelId === selectedChannel;
-
     const matchesPriority =
       selectedPriority === 'All' || video.priority === selectedPriority;
 
-    return matchesSearch && matchesStatus && matchesChannel && matchesPriority;
-  }), [videos, search, selectedFilter, selectedChannel, selectedPriority]);
+    return matchesSearch && matchesStatus && matchesPriority;
+  }), [videos, search, selectedFilter, selectedPriority]);
 
   const statusColor = (status) => {
     if (status === 'Published') return colors.success;
@@ -184,43 +154,6 @@ export default function VideosScreen({ navigation }) {
                 <Text style={{ color: active ? colors.onPrimary : colors.textSecondary, fontSize: 12, fontWeight: '700' }}>{item}</Text>
               </TouchableOpacity>;
             }} />
-          {/* ADVANCED FILTERS SECTION */}
-          <Text style={[styles.filterHeading, { color: colors.text }]}>
-            Filter by Channel
-          </Text>
-
-          <FlatList
-            horizontal
-            data={channelOptions}
-            keyExtractor={(item) => item.id}
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.advancedFilterList}
-            renderItem={({ item }) => {
-              const active = selectedChannel === item.id;
-
-              return (
-                <TouchableOpacity
-                  onPress={() => setChannelFilter({ workspaceId: workspaceChannelId, id: item.id })}
-                  style={[
-                    styles.filter,
-                    {
-                      backgroundColor: active ? colors.primary : colors.surface,
-                      borderColor: active ? colors.primary : colors.border,
-                    },
-                  ]}
-                >
-                  <Text style={{
-                    color: active ? colors.onPrimary : colors.textSecondary,
-                    fontSize: 12,
-                    fontWeight: '700',
-                  }}>
-                    {item.name}
-                  </Text>
-                </TouchableOpacity>
-              );
-            }}
-          />
-
           <Text style={[styles.filterHeading, { color: colors.text }]}>
             Filter by Priority
           </Text>
@@ -259,14 +192,12 @@ export default function VideosScreen({ navigation }) {
 
           {(search.length > 0 ||
             selectedFilter !== 'All' ||
-            selectedChannel !== 'All' ||
             selectedPriority !== 'All') && (
             <TouchableOpacity
               activeOpacity={0.7}
               onPress={() => {
                 setSearch('');
                 setSelectedFilter('All');
-                setChannelFilter({ workspaceId: workspaceChannelId, id: 'All' });
                 setSelectedPriority('All');
               }}
               style={styles.clearFilters}

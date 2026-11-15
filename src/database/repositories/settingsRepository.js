@@ -1,4 +1,5 @@
 import SQLiteStorage from 'expo-sqlite/kv-store';
+import { Platform } from 'react-native';
 import { getDatabase } from '../database';
 import { defaultVisualTheme, normalizeCustomHex, normalizeVisualThemeName } from '../../theme/colors';
 
@@ -8,6 +9,12 @@ const THEME_KEY = 'creatorstudio.theme.v1';
 const REMINDERS_KEY = 'creatorstudio.uploadReminders.v1';
 const WORKSPACE_CHANNEL_KEY = 'creatorstudio.workspaceChannel.v1';
 const APP_PREFERENCES_KEY = 'creatorstudio.appPreferences.v1';
+
+async function waitForMainDatabaseOnWeb() {
+  if (Platform.OS === 'web') {
+    await getDatabase();
+  }
+}
 
 export const defaultAppPreferences = {
   reminderLeadMinutes: 60,
@@ -35,6 +42,7 @@ function normalizeAppPreferences(value = {}) {
 }
 
 export async function getAppPreferences() {
+  await waitForMainDatabaseOnWeb();
   const saved = await storage.getItemAsync(APP_PREFERENCES_KEY);
   if (!saved) return { ...defaultAppPreferences };
   try {
@@ -106,6 +114,7 @@ export async function saveCreatorProfile(profile) {
 }
 
 export async function getSavedThemeMode() {
+  await waitForMainDatabaseOnWeb();
   const mode = await storage.getItemAsync(THEME_KEY);
   return mode === 'light' || mode === 'dark' ? mode : 'system';
 }
