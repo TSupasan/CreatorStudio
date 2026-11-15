@@ -86,3 +86,31 @@ Since CreatorStudio stores data locally, it includes backup and restore function
 - **Data Portability:** Helps users move supported project information between installations.
 
 *Note: The current backup functionality covers channels, videos, tasks, and their relationships. Ideas, application settings, and image binary files are not included in the current backup.*
+
+
+## 📱 Application Screenshots
+
+Explore the CreatorStudio application through the screenshots below.
+
+<table>
+  <tr>
+    <td align="center" width="25%"><strong>01. Loading Page</strong><br><img src="screenshots/Loading%20Page.PNG" width="100%"></td>
+    <td align="center" width="25%"><strong>02. Home Page</strong><br><img src="screenshots/Home%20Page.PNG" width="100%"></td>
+    <td align="center" width="25%"><strong>03. Dashboard</strong><br><img src="screenshots/Dashboard.PNG" width="100%"></td>
+    <td align="center" width="25%"><strong>04. Workspace</strong><br><img src="screenshots/Workspace.PNG" width="100%"></td>
+  </tr>
+  <tr><td colspan="4" height="18"></td></tr>
+  <tr>
+    <td align="center" width="25%"><strong>05. Manage Channels</strong><br><img src="screenshots/Manage%20Channels.PNG" width="100%"></td>
+    <td align="center" width="25%"><strong>06. Video Page</strong><br><img src="screenshots/Video%20Page.PNG" width="100%"></td>
+    <td align="center" width="25%"><strong>07. Create Project</strong><br><img src="screenshots/Create%20Project.PNG" width="100%"></td>
+    <td align="center" width="25%"><strong>08. Idea Vault</strong><br><img src="screenshots/Idea%20Vault.PNG" width="100%"></td>
+  </tr>
+  <tr><td colspan="4" height="18"></td></tr>
+  <tr>
+    <td align="center" width="25%"><strong>09. Content Calendar</strong><br><img src="screenshots/Content%20Calender.PNG" width="100%"></td>
+    <td align="center" width="25%"><strong>10. App Theme</strong><br><img src="screenshots/App%20Theme.PNG" width="100%"></td>
+    <td align="center" width="25%"><strong>11. App Theme 2</strong><br><img src="screenshots/App%20Theme_2.PNG" width="100%"></td>
+    <td align="center" width="25%"><strong>12. Backup &amp; Restore</strong><br><img src="screenshots/Backup%20%26%20Restore.PNG" width="100%"></td>
+  </tr>
+</table>
